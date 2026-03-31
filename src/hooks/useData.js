@@ -300,7 +300,7 @@ export const useData = () => {
     };
 
     return {
-        requests, currentSong, schedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent, maxSongDuration, loading,
+        requests, currentSong, schedule, setSchedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent, maxSongDuration, loading,
         addRequest, deleteRequest, moveInQueue, toggleRequestLock, playNextSong, stopSong, handleSongEnd, updateVolume, updateSchedule,
         addEventPlaylist, deleteEventPlaylist, addSongToEvent, deleteSongFromEvent, setPlaybackMode: setPlaybackModeAction, setMaxDuration: setMaxDurationAction
     };

@@ -47,9 +47,9 @@ function App() {
   // --- Hooks ---
   const { isAuthenticated, login, logout } = useAuth();
   const {
-    requests, currentSong, schedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent,
+    requests, currentSong, schedule, setSchedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent,
     maxSongDuration, setMaxDuration, addRequest, deleteRequest, moveInQueue, toggleRequestLock, playNextSong, stopSong,
-    updateVolume, updateSchedule, setSchedule, handleSongEnd,
+    updateVolume, updateSchedule, handleSongEnd,
     addEventPlaylist, deleteEventPlaylist, addSongToEvent, deleteSongFromEvent, setPlaybackMode
   } = useData();
 

@@ -64,7 +64,7 @@ const AppShell = ({ children }) => {
       {/* ── Interactive Mouse Follower Orb ── */}
       <div 
         ref={spotlightRef}
-        className="pointer-events-none fixed top-0 left-0 w-[20px] h-[20px] z-[1]"
+        className="pointer-events-none fixed top-0 left-0 w-[30px] h-[30px] z-[1]"
         style={{
             willChange: 'transform',
             transition: 'opacity 0.3s' // Removed transform transition to allow JS lerping to handle smoothness without CSS conflicts
@@ -77,9 +77,9 @@ const AppShell = ({ children }) => {
                 className="absolute inset-0 rounded-full animate-infinity-core"
                 style={{
                     background: isLight 
-                        ? 'radial-gradient(circle, #ffffff 10%, rgba(59,130,246,0.95) 40%, transparent 75%)' 
-                        : 'radial-gradient(circle, #ffffff 10%, rgba(168,85,247,0.95) 40%, transparent 75%)',
-                    boxShadow: isLight ? '0 0 15px 5px rgba(59,130,246,0.5)' : '0 0 20px 8px rgba(168,85,247,0.6)'
+                        ? 'radial-gradient(circle, #ffffff 10%, rgba(59,130,246,0.6) 40%, transparent 75%)' 
+                        : 'radial-gradient(circle, #ffffff 10%, rgba(168,85,247,0.6) 40%, transparent 75%)',
+                    boxShadow: isLight ? '0 0 15px 5px rgba(59,130,246,0.2)' : '0 0 20px 8px rgba(168,85,247,0.3)'
                 }}
             />
             {/* Left Wing (Forms Infinity) */}
