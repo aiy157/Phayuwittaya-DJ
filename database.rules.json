@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "requests": {
+      ".read": true,
+      ".write": true,
+      "$requestId": {
+        ".validate": "newData.hasChildren(['url'])"
+      }
+    },
+    "currentSong": {
+      ".read": true,
+      ".write": true
+    },
+    "schedule": {
+      ".read": true,
+      ".write": true
+    },
+    "volume": {
+      ".read": true,
+      ".write": true,
+      ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+    },
+    "settings": {
+      ".read": true,
+      ".write": true
+    },
+    "eventPlaylists": {
+      ".read": true,
+      ".write": true
+    },
+    "fallbackPlaylist": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

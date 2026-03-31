@@ -1,0 +1,175 @@
+/* ============================================================
+   THEME: LIGHT (Premium Porcelain / Oceanic)
+   Strategy: Soft, breathable whites, crisp contrast, luxurious deep shadows.
+   ============================================================ */
+
+html.light-theme {
+    color-scheme: light;
+    
+    /* ── Typography (High Contast, Readability) ── */
+    --text-100: #0f172a; /* Slate 900 */
+    --text-80:  #334155; /* Slate 700 */
+    --text-50:  #64748b; /* Slate 500 */
+    --text-30:  #94a3b8; /* Slate 400 */
+
+    /* ── Surfaces (Ceramic White / Pearl) ── */
+    --surface-bg: #f8fafc; /* Crisp Slate 50 background */
+    --glass-06: rgba(255, 255, 255, 0.65);
+    --glass-10: rgba(255, 255, 255, 0.88);
+    --glass-15: rgba(255, 255, 255, 0.94);
+    --glass-20: rgba(255, 255, 255, 0.99);
+
+    /* ── Refined Borders ── */
+    --border-dim: rgba(59, 130, 246, 0.08);
+    --border-mid: rgba(59, 130, 246, 0.16);
+    --border-hi:  rgba(59, 130, 246, 0.28);
+
+    /* ── Luxurious Float Shadows ── */
+    --shadow-base: 0 16px 32px -8px rgba(30, 58, 138, 0.08);
+}
+
+/* ─── Page background ─── */
+html.light-theme body,
+html.light-theme #root {
+    background: linear-gradient(160deg, #eff6ff 0%, #ffffff 40%, #f1f5f9 70%, #e2e8f0 100%) !important;
+    color: #0f172a !important;
+}
+
+/* ─── Navbar ─── */
+html.light-theme nav > div {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.10) !important;
+    box-shadow: 0 4px 30px rgba(59, 130, 246, 0.06), 0 1px 0 rgba(255, 255, 255, 1) inset !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+}
+html.light-theme nav .text-white,
+html.light-theme nav span.text-white { color: #0f172a !important; }
+html.light-theme nav [role="tablist"] {
+    background: rgba(59, 130, 246, 0.04) !important;
+    border-color: rgba(59, 130, 246, 0.12) !important;
+}
+html.light-theme nav [role="tab"] { color: #64748b !important; }
+html.light-theme nav [role="tab"]:hover { color: #334155 !important; }
+
+/* ─── Stat cards ─── */
+html.light-theme .stat-card {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(59, 130, 246, 0.08) !important;
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    backdrop-filter: blur(12px) !important;
+}
+html.light-theme .section-label { color: #64748b !important; }
+
+/* ─── Glass cards ─── */
+html.light-theme .glass,
+html.light-theme .card,
+html.light-theme .card-blue,
+html.light-theme .glass-strong,
+html.light-theme .card-interactive {
+    background: rgba(255, 255, 255, 0.88) !important;
+    border: 1px solid rgba(59, 130, 246, 0.10) !important;
+    box-shadow: 0 10px 32px rgba(59, 130, 246, 0.06) !important;
+}
+
+/* ─── Text Base Classes ─── */
+html.light-theme .text-white,
+html.light-theme span.text-white,
+html.light-theme p.text-white,
+html.light-theme h1.text-white,
+html.light-theme h2.text-white,
+html.light-theme h3.text-white,
+html.light-theme h4.text-white,
+html.light-theme div.text-white { color: #0f172a !important; }
+
+html.light-theme .text-white\/95, html.light-theme .text-white\/90 { color: #1e293b !important; }
+html.light-theme .text-white\/85, html.light-theme .text-white\/80 { color: #334155 !important; }
+html.light-theme .text-white\/70, html.light-theme .text-white\/60,
+html.light-theme .text-white\/55, html.light-theme .text-white\/50 { color: #64748b !important; }
+html.light-theme .text-white\/40, html.light-theme .text-white\/35,
+html.light-theme .text-white\/30, html.light-theme .text-white\/25,
+html.light-theme .text-white\/20, html.light-theme .text-white\/15,
+html.light-theme .text-white\/10 { color: #94a3b8 !important; }
+
+html.light-theme .text-slate-200, html.light-theme .text-slate-300 { color: #1e293b !important; }
+html.light-theme .text-slate-400 { color: #64748b !important; }
+html.light-theme .text-slate-500, html.light-theme .text-slate-600 { color: #94a3b8 !important; }
+
+/* ─── Brand accent text & gradient ─── */
+html.light-theme .text-brand-300, html.light-theme .text-brand-400 { color: #2563eb !important; }
+html.light-theme .text-gradient {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+html.light-theme .text-gradient-blue {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* ─── Backgrounds (Tailwind classes) ─── */
+html.light-theme .bg-black\/20, html.light-theme .bg-black\/30,
+html.light-theme .bg-black\/40, html.light-theme .bg-black\/60 { background: rgba(59, 130, 246, 0.05) !important; }
+
+html.light-theme .bg-white\/5, html.light-theme .bg-white\/10, html.light-theme [class*="bg-white/["] {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(59, 130, 246, 0.10) !important;
+}
+
+html.light-theme .hover\:bg-white\/\[0\.06\]:hover, html.light-theme .hover\:bg-white\/10:hover,
+html.light-theme .hover\:bg-white\/5:hover { background: #f8fafc !important; }
+
+/* ─── Borders ─── */
+html.light-theme .border-white\/5, html.light-theme .border-white\/10,
+html.light-theme .border-white\/20, html.light-theme [class*="border-white/["] { border-color: rgba(59, 130, 246, 0.12) !important; }
+html.light-theme .border-dashed { border-color: rgba(59, 130, 246, 0.20) !important; }
+
+/* ─── Inputs ─── */
+html.light-theme input[type="text"], html.light-theme input[type="password"],
+html.light-theme input[type="time"], html.light-theme textarea, html.light-theme .input-premium {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(59, 130, 246, 0.15) !important;
+    color: #0f172a !important;
+}
+html.light-theme input::placeholder, html.light-theme textarea::placeholder, html.light-theme .input-premium::placeholder { color: #94a3b8 !important; }
+html.light-theme input[type="text"]:focus, html.light-theme input[type="password"]:focus, html.light-theme .input-premium:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 0 20px rgba(59, 130, 246, 0.05) !important;
+}
+
+/* ─── Select ─── */
+html.light-theme select {
+    background-color: #ffffff !important;
+    border-color: rgba(59, 130, 246, 0.18) !important;
+    color: #0f172a !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(59,130,246,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+}
+
+/* ─── Buttons ─── */
+html.light-theme .btn-secondary { background: rgba(255, 255, 255, 0.90) !important; border-color: rgba(59, 130, 246, 0.16) !important; color: #1e293b !important; }
+html.light-theme .btn-ghost { color: #64748b !important; }
+html.light-theme .btn-ghost:hover { background: rgba(59, 130, 246, 0.08) !important; color: #1e293b !important; }
+html.light-theme .btn-icon { background: rgba(255, 255, 255, 0.90) !important; border-color: rgba(59, 130, 246, 0.14) !important; color: #64748b !important; }
+
+/* ─── Nav‑tab strip (Dashboard/Navbar) ─── */
+html.light-theme .nav-tab { color: #64748b !important; }
+html.light-theme .nav-tab:hover { color: #334155 !important; }
+html.light-theme .nav-tab-active { color: #0f172a !important; }
+html.light-theme [style*="borderBottom"][style*="rgba(255,255,255,0.08"] { border-bottom-color: rgba(59, 130, 246, 0.12) !important; }
+html.light-theme [role="tab"][aria-selected="true"] { color: #0f172a !important; }
+html.light-theme [role="tab"][aria-selected="false"] { color: #94a3b8 !important; }
+
+/* ─── Toggle ─── */
+html.light-theme .toggle-off { background: rgba(59, 130, 246, 0.10) !important; }
+/* ─── Progress & UI elements ─── */
+html.light-theme .progress-track { background: rgba(59, 130, 246, 0.08) !important; }
+html.light-theme .wave-bar { background: linear-gradient(to top, #3b82f6, #93c5fd) !important; }
+html.light-theme input[type="range"] { background: rgba(59, 130, 246, 0.10) !important; }
+html.light-theme ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.15) !important; }
+html.light-theme ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.25) !important; }
+html.light-theme :focus-visible { outline-color: rgba(59, 130, 246, 0.6) !important; }
+html.light-theme .shimmer-anim { background: linear-gradient(90deg, transparent 25%, rgba(59, 130, 246, 0.04) 50%, transparent 75%) !important; }
+html.light-theme .shadow-inner { box-shadow: none !important; }

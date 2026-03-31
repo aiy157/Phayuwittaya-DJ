@@ -1,0 +1,46 @@
+/* ============================================================
+   THEME: DARK (Midnight Cosmic)
+   Strategy: High-end OLED contrast, deep purples, and immersive glow.
+   ============================================================ */
+
+:root {
+    /* ── Billion-Dollar Brand Colors (Vibrant & Deep) ── */
+    --blue: #3b82f6;          /* iOS Blue */
+    --blue-glow: rgba(59, 130, 246, 0.55);
+    --violet: #8b5cf6;        /* Deep Violet */
+    --violet-glow: rgba(139, 92, 246, 0.55);
+    --rose: #f43f5e;          /* Hyper Rose */
+    --rose-glow: rgba(244, 63, 94, 0.45);
+    --cyan: #06b6d4;          /* Cyber Cyan */
+    --cyan-glow: rgba(6, 182, 212, 0.45);
+    --emerald: #10b981;
+    --amber: #f59e0b;
+
+    /* ── Dark Mode Typography (Crisp & Legible) ── */
+    --text-100: #FFFFFF;
+    --text-80: rgba(255, 255, 255, 0.88);
+    --text-50: rgba(255, 255, 255, 0.55);
+    --text-30: rgba(255, 255, 255, 0.35);
+
+    /* ── Surfaces (OLED & Deep Space Luxury) ── */
+    --surface-bg: #030712;    /* Slate 950 essentially */
+    --glass-06: rgba(15, 23, 42, 0.65); /* Rich dark glass */
+    --glass-10: rgba(15, 23, 42, 0.85);
+    --glass-15: rgba(30, 41, 59, 0.85); /* Slightly lifted */
+    --glass-20: rgba(30, 41, 59, 0.95);
+    
+    /* ── Refined Frosted Borders ── */
+    --border-dim: rgba(255, 255, 255, 0.05);
+    --border-mid: rgba(255, 255, 255, 0.12);
+    --border-hi: rgba(255, 255, 255, 0.22);
+    
+    /* ── Immersive Shadow Elements ── */
+    --shadow-base: 0 16px 40px -8px rgba(0, 0, 0, 0.9);
+
+    /* ── Fluid Spacing ── */
+    --space-xs: clamp(0.5rem, 1vw, 0.75rem);
+    --space-sm: clamp(0.75rem, 2vw, 1rem);
+    --space-md: clamp(1rem, 3vw, 1.5rem);
+    --space-lg: clamp(1.5rem, 4vw, 2.5rem);
+    --space-xl: clamp(2rem, 5vw, 4rem);
+}

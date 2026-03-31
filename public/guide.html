@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhayuWittaya DJ - Official User Manual</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* THE SETUP - Dark Mode Modern App Theme */
+        * {
+            box-sizing: border-box;
+        }
+
+        p,
+        li,
+        div {
+            margin: 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        body {
+            background-color: #0f172a;
+            display: grid;
+            gap: 40px;
+            grid-template-columns: 1fr;
+            margin: 0;
+            padding: 40px 0;
+            place-items: center;
+        }
+
+        .slide-container {
+            align-items: center;
+            background-color: #0B0E14;
+            background-image: radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 0% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            height: 720px;
+            justify-content: center;
+            overflow: hidden;
+            padding: 50px 60px;
+            position: relative;
+            width: 1280px;
+        }
+
+        .slide-container h1,
+        .slide-container h2,
+        .slide-container h3 {
+            color: #F8FAFC;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #06B6D4, #A855F7, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        a.no-underline {
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        a.no-underline:hover .gradient-text {
+            opacity: 0.8;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .slide-container p,
+        .slide-container li,
+        .slide-container .subtitle {
+            color: #94A3B8;
+            font-family: 'Inter', sans-serif;
+            font-size: 19px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .slide-container h1 {
+            font-size: 75px;
+            letter-spacing: -1.5px;
+        }
+
+        .slide-container h3 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #E2E8F0;
+        }
+
+        .slide-container .slide-title {
+            font-size: 40px;
+            margin-bottom: 30px;
+            text-align: left;
+            width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 15px;
+        }
+
+        .slide-container .subtitle {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 25px auto;
+            color: #CBD5E1;
+        }
+
+        .slide-container .content-area {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .title-layout {
+            text-align: center;
+        }
+
+        .two-column {
+            align-items: center;
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 40px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .two-column ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .two-column li {
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .two-column li::before {
+            content: '\f105';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: #A855F7;
+            position: absolute;
+            left: 0;
+            top: 2px;
+        }
+
+        .image-wrapper {
+            background-color: #121826;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            height: 480px;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .section-title-layout {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .section-title-layout h2 {
+            font-size: 65px;
+            margin-bottom: 20px;
+        }
+
+        .section-title-layout p {
+            font-size: 24px;
+            margin: 0 auto;
+            max-width: 800px;
+            color: #94A3B8;
+        }
+
+        .section-title-layout hr {
+            background: linear-gradient(90deg, #06B6D4, #A855F7);
+            border: none;
+            border-radius: 3px;
+            height: 6px;
+            margin: 40px auto;
+            width: 120px;
+        }
+
+        /* แก้อาการตกบรรทัดของข้อความที่ถูกเน้น */
+        .highlight-word {
+            color: #A855F7;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .ui-label {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9em;
+            display: inline-block;
+            /* สำคัญมาก: ช่วยให้กล่องปุ่มไม่แยกบรรทัดกัน */
+            white-space: nowrap;
+            /* สำคัญมาก: ป้องกันไม่ให้ข้อความในกล่องฉีกขาด */
+            margin: 2px 0;
+            vertical-align: middle;
+        }
+
+        /* PRINT STYLES FOR PERFECT PDF EXPORT */
+        @media print {
+            @page {
+                size: 1280px 720px;
+                margin: 0;
+            }
+
+            body {
+                display: block;
+                padding: 0;
+                background-color: #0B0E14;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .slide-container {
+                width: 100vw;
+                height: 100vh;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            script {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Slide 1: Title -->
+    <div class="slide-container">
+        <div class="title-layout">
+            <a href="https://music-phayuwittaya.web.app/" target="_blank" class="no-underline">
+                <h1 class="gradient-text">PhayuWittaya DJ</h1>
+            </a>
+            <p class="subtitle">ระบบขอเพลงออนไลน์แบบเรียลไทม์ (Real-time Online Request System)</p>
+            <p style="margin-top: 30px; color: #64748b;">คู่มือผู้ใช้งานอย่างเป็นทางการ สำหรับนักเรียน และ ผู้จัดรายการ
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Section 1 -->
+    <div class="slide-container">
+        <div class="section-title-layout">
+            <hr>
+            <h2><span class="gradient-text">ภาคที่ 1</span><br>สำหรับผู้ฟัง (User)</h2>
+            <p>คู่มือการใช้งานสำหรับนักเรียนและบุคลากรทั่วไป<br>เพื่อส่งคำขอเพลงเข้าสู่สถานีวิทยุของโรงเรียน</p>
+        </div>
+    </div>
+
+    <!-- Slide 3: วิธีการขอเพลง (1.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">หน้าจอหลัก: วิธีการค้นหาเพลง</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>เข้าสู่หน้าต่าง <span class="highlight-word">"ขอเพลงออนไลน์"</span> คุณสามารถเริ่มต้นได้ง่ายๆ:
+                    </p>
+                    <ul>
+                        <li><span class="highlight-word">พิมพ์ชื่อเพลง/ศิลปิน</span> หรือนำ <span
+                                class="highlight-word">ลิงก์ YouTube</span><br>มาวางในกล่องค้นหาได้ทันที</li>
+                        <li>กดปุ่ม <span class="ui-label"><i class="fa-solid fa-magnifying-glass"></i> ค้นหาเพลง</span>
+                        </li>
+                        <li>ระบบจะแสดงสถานะ <span class="highlight-word">คิวเพลงรอ</span>
+                            <br>ที่ด้านล่างให้ทราบแบบเรียลไทม์ (เช่น "1 เพลงในคิว")
+                        </li>
+                        <li>สังเกตขีดจำกัดความยาว (เช่น ไม่เกิน 10 นาที)
+                            <br>เพื่อกระจายโอกาสในการฟังเพลงให้ทุกคนอย่างทั่วถึง
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="1.png" alt="หน้าจอหลักการขอเพลง"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: ผลการค้นหา (2.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">หน้าผลการค้นหา และการส่งคำขอ</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>เมื่อกดค้นหา (ตัวอย่าง: ค้นหาคำว่า "บางระจัน"):</p>
+                    <ul>
+                        <li>ระบบจะดึงผลลัพธ์จาก YouTube มาแสดงทันที<br>พร้อมโชว์ภาพปกและ <span
+                                class="highlight-word">ความยาวของคลิปวิดีโอ</span></li>
+                        <li>คลิกเลือกคลิปวิดีโอที่คุณต้องการเปิด <br>เพลงจะถูกส่งเข้า <span
+                                class="highlight-word">ระบบคิว</span> ของสถานีอัตโนมัติ</li>
+                        <li>หากเพลงนั้นกำลังเล่นอยู่ หรือมีคนขอไปแล้ว ระบบจะมี<br><span
+                                class="highlight-word">การแจ้งเตือน</span> เด้งขึ้นมา เพื่อป้องกันคิวทับซ้อน</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="2.png" alt="หน้าผลการค้นหาเพลง"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Section 2 -->
+    <div class="slide-container">
+        <div class="section-title-layout">
+            <hr>
+            <h2><span class="gradient-text">ภาคที่ 2</span><br>แผงควบคุมดีเจ (Manager)</h2>
+            <p>ศูนย์รวมการควบคุมทิศทางสถานีวิทยุออนไลน์ (DJ Dashboard)<br>เครื่องมือครบครันสำหรับแอดมินในหน้าจอเดียว</p>
+        </div>
+    </div>
+
+    <!-- Slide 6: Login (6.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">การเข้าสู่ระบบผู้ดูแล (Admin Login)</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>ก่อนเข้าใช้งานแผงควบคุม (Dashboard) ต้องเข้าสู่ระบบก่อน:</p>
+                    <ul>
+                        <li>คลิกที่ปุ่ม <span class="ui-label"><i class="fa-solid fa-border-all"></i> จัดการ</span>
+                            บริเวณมุมบนขวาของหน้าจอ</li>
+                        <li>ระบบจะพามาที่หน้า <strong>"ระบบสำหรับผู้ดูแล"</strong></li>
+                        <li>กรอกรหัสผ่านเพื่อเข้าใช้งาน: <br><span class="ui-label"
+                                style="background-color: rgba(168, 85, 247, 0.2); border: 1px solid #A855F7; color: #E2E8F0; font-family: monospace; font-size: 20px; letter-spacing: 2px; margin-top: 10px;">pw12pw</span>
+                        </li>
+                        <li>จากนั้นกดปุ่ม <span class="highlight-word">เข้าสู่ระบบ</span> เพื่อเริ่มต้นทำงานได้ทันที
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="6.png" alt="หน้าต่างเข้าสู่ระบบสำหรับผู้ดูแล"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Control Center (3.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">แผงควบคุมหลัก (Control Center)</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>ควบคุมทุกอย่างได้จากแถบเมนูด้านบนของ Dashboard:</p>
+                    <ul>
+                        <li><span class="ui-label">SYSTEM STATUS</span> ตรวจสอบสถานะการเชื่อมต่อ (เช่น Offline)</li>
+                        <li><span class="ui-label">PLAYBACK MODE</span> แสดงโหมดปัจจุบันที่กำลังทำงาน<br><span
+                                style="font-size: 0.85em; color: #64748b;">(เช่น Queue Mode
+                                สำหรับเล่นตามคิวนักเรียน)</span></li>
+                        <li><span class="ui-label">REQUESTS</span> สวิตช์ปิด-เปิด การรับคำขอเพลงจากนักเรียน<br><span
+                                style="font-size: 0.85em; color: #64748b;">(สามารถกดปิดได้ทันที
+                                หากมีกิจกรรมหรือประกาศด่วน)</span></li>
+                        <li><span class="ui-label">VOLUME CONTROL</span> แถบปรับระดับเสียงหลัก<br><span
+                                style="font-size: 0.85em; color: #64748b;">(ควบคุมเสียงที่กระจายออกจากระบบไปสู่ผู้ฟัง)</span>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="3.png" alt="แผงควบคุมหลักด้านบน"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Schedule (4.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">ระบบตารางเวลา และ เครื่องเล่น (Player)</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>จัดการการออกอากาศอัตโนมัติ ไม่ต้องกลัวเปิดทิ้งไว้:</p>
+                    <ul>
+                        <li><span class="highlight-word">DJ Schedule:</span>
+                            กำหนดตารางเปิด-ปิดสถานีในแต่ละวัน<br>(แบ่งเป็น ภาคเช้า, พักเที่ยง, และภาคบ่าย)</li>
+                        <li><span class="highlight-word">การสลับโหมดการเล่น (Mode):</span>
+                            <div
+                                style="margin-top: 10px; margin-bottom: 10px; padding-left: 10px; border-left: 2px solid rgba(255,255,255,0.1);">
+                                <span class="ui-label"
+                                    style="background-color: rgba(59, 130, 246, 0.2); color: #BFDBFE; border: 1px solid #3B82F6;">🎓
+                                    Student</span> ดึงเพลงจากคิวที่นักเรียนขอมา<br>
+                                <span class="ui-label"
+                                    style="background-color: rgba(236, 72, 153, 0.2); color: #FBCFE8; border: 1px solid #EC4899; margin-top: 5px;">🎪
+                                    Festival</span> ดึงเพลงจากเพลย์ลิสต์ที่เราเตรียมไว้
+                            </div>
+                        </li>
+                        <li><span class="highlight-word" style="color: #EC4899;">⚠️ ข้อควรจำ:</span>
+                            ทุกครั้งที่เปิดเว็บขึ้นมาใหม่ ให้กดปุ่ม <br><span class="ui-label">Reload Player</span>
+                            ที่มุมขวาบนของเครื่องเล่นเสมอ เพื่อรีเซ็ตระบบ</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="4.png" alt="หน้าตั้งเวลา DJ Schedule และ Player"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Schedule - Festival Mode (9.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">การตั้งค่าตารางเวลา: โหมดเทศกาล (Festival)</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>เมื่อคุณต้องการเปิดเพลงเฉพาะกิจตามเทศกาลต่างๆ:</p>
+                    <ul>
+                        <li>ในตารางเวลา (เช่น ภาคเที่ยง) ให้คลิกเปลี่ยนโหมดเป็นปุ่ม <br><span class="ui-label"
+                                style="background-color: rgba(236, 72, 153, 0.2); color: #FBCFE8; border: 1px solid #EC4899;">🎪
+                                Festival</span></li>
+                        <li>ระบบจะแสดงช่องให้คุณเลือก <strong>"หมวดหมู่เพลย์ลิสต์"</strong> ที่ต้องการ <br><span
+                                style="font-size: 0.85em; color: #64748b;">(ตัวอย่างในภาพคือ ทำการเลือกเพลย์ลิสต์
+                                "ปัจฉิม")</span></li>
+                        <li>เมื่อถึงเวลาที่กำหนด ระบบจะเพิกเฉยต่อคิวของนักเรียน <br>และดึงเพลงจากเพลย์ลิสต์ "ปัจฉิม"
+                            มาเปิดวนไปเรื่อยๆ ทันที</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="9.png" alt="ตารางเวลาโหมด Festival"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Queue (5.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">การจัดการคิวเพลง (Queue Management)</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>ส่วนล่างสุดคือ <span class="highlight-word">"รายการรอเล่น"</span> (คิวเพลง):</p>
+                    <ul>
+                        <li>เห็นลำดับเพลงทั้งหมดแบบ <span class="highlight-word">Real-time</span>
+                            ที่นักเรียนขอเข้ามา<br>(เช่น I Wanna Be Yours, บางระจันวันเพ็ญ)</li>
+                        <li>ระบบจัดเรียงลำดับเวลาแม่นยำ ป้องกันการแทรกคิวทับซ้อน</li>
+                        <li><span class="highlight-word">Auto-DJ:</span> หากคิวเพลงเหล่านี้ว่างเปล่า (0 คิว)
+                            <br>ระบบจะสลับไปดึงชุดเพลงฟังสบายๆ
+                            มาเล่นคลออัตโนมัติ<br>จนกว่าจะมีนักเรียนกดส่งคิวใหม่เข้ามา
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="5.png" alt="รายการคิวเพลงรอเล่น"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: Festival Library Overview (7.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">คลังเพลงเทศกาล (Festival Library)</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>สลับมาที่แถบเมนู <strong>Festival Library</strong> เพื่อจัดการเพลย์ลิสต์:</p>
+                    <ul>
+                        <li>ระบบนี้ใช้สำหรับเตรียม Playlist เพลงพิเศษ<br>เพื่อนำไปเปิดตามช่วงเทศกาลต่างๆ (เช่น ปัจฉิม,
+                            วันครู, กีฬาสี)</li>
+                        <li>การจัดการคลังนี้ จะแยกออกจากคิวของนักเรียนอย่างชัดเจน</li>
+                        <li>เริ่มต้นสร้างหมวดหมู่ใหม่ได้ง่ายๆ เพียงพิมพ์ชื่อเทศกาล<br>ที่ช่องด้านซ้าย แล้วกดปุ่ม <span
+                                class="ui-label" style="background-color: #3B82F6;">+</span> เพื่อเพิ่มหมวดหมู่</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="7.png" alt="หน้าต่างคลังเพลงเทศกาลที่ว่างเปล่า"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Festival Library Add Songs (8.png) -->
+    <div class="slide-container">
+        <h2 class="slide-title">การเพิ่มเพลงเข้าสู่ Playlist</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>หลังจากสร้างหมวดหมู่ (เช่น "ปัจฉิม") คุณสามารถเพิ่มเพลงได้ 2 ช่องทาง:</p>
+                    <ul>
+                        <li><span class="highlight-word">SINGLE ADD:</span> เพิ่มทีละเพลง สามารถพิมพ์
+                            "ชื่อเพลง"<br>เพื่อค้นหา หรือวางลิงก์ YouTube ได้เหมือนหน้าเว็บหลัก</li>
+                        <li><span class="highlight-word">BULK IMPORT (PLAYLIST):</span>
+                            นำเข้าแบบเหมา!<br>เพียงไปคัดลอกลิงก์ <span class="ui-label">Playlist</span> จากเว็บ YouTube
+                            มาวาง<br>ระบบจะดึงเพลงทั้งหมดมาใส่คลังให้ทันที</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper"><img src="8.png" alt="หน้าการเพิ่มเพลงในคลังเทศกาล"
+                            onerror="handleImageError(this)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 13: End -->
+    <div class="slide-container">
+        <div class="section-title-layout">
+            <a href="https://music-phayuwittaya.web.app/" target="_blank" class="no-underline">
+                <h2 class="gradient-text" style="font-size: 80px;">Let's Play The Music!</h2>
+            </a>
+            <p style="margin-top: 20px;">ระบบพร้อมสร้างสีสันให้กับทุกกิจกรรมของคุณแล้ว</p>
+            <p style="color: #06B6D4; font-size: 20px; font-weight: 600; margin-top: 40px; letter-spacing: 2px;">
+                ENJOY THE REAL-TIME EXPERIENCE
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // โค้ดนี้จะทำงานเฉพาะในหน้า Preview เพื่อแจ้งเตือนผู้ใช้เมื่อโหลดภาพไม่สำเร็จ
+        function handleImageError(img) {
+            img.onerror = null;
+            img.style.display = 'none';
+            const parent = img.parentElement;
+            const msg = document.createElement('div');
+            msg.style.color = '#94A3B8';
+            msg.style.textAlign = 'center';
+            msg.style.padding = '20px';
+            msg.style.lineHeight = '1.6';
+            msg.style.fontFamily = 'Inter, sans-serif';
+            msg.innerHTML = '<i class="fa-solid fa-image" style="font-size: 50px; color: #334155; margin-bottom: 15px;"></i><br><b style="color: #F8FAFC; font-size: 18px;">โหมด Preview ไม่สามารถโหลดภาพจากเครื่องคุณได้</b><br><span style="font-size: 14px;">วิธีดูภาพ: ให้เซฟไฟล์โค้ดนี้เป็น .html<br>และนำไปวางไว้โฟลเดอร์เดียวกับไฟล์ภาพชื่อ<br><span style="color: #A855F7; font-family: monospace; padding: 2px 5px; background: rgba(255,255,255,0.05); border-radius: 4px;">' + img.getAttribute('src') + '</span><br>บนคอมพิวเตอร์ของคุณ</span>';
+            parent.appendChild(msg);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\public",
+    "\\src",
+    "\\src\\assets",
+    "\\src\\components",
+    "\\src\\components\\features",
+    "\\src\\components\\layout",
+    "\\src\\components\\views",
+    "\\src\\components\\widgets",
+    "\\src\\services"
+  ],
+  "SelectedNode": "\\src\\components\\views\\ManagerDashboard.jsx",
+  "PreviewInSolutionExplorer": false
+}
