@@ -22,8 +22,16 @@ export const useData = () => {
 
     const requestsRef = useRef(requests);
     const processingRef = useRef(false);
+    // Stable refs for handleSongEnd — avoids stale closure & stale deps
+    const playbackModeRef = useRef(playbackMode);
+    const activeEventRef = useRef(activeEvent);
+    const eventPlaylistsRef = useRef(eventPlaylists);
+    const fallbackPlaylistRef = useRef(null); // set below
 
     useEffect(() => { requestsRef.current = requests; }, [requests]);
+    useEffect(() => { playbackModeRef.current = playbackMode; }, [playbackMode]);
+    useEffect(() => { activeEventRef.current = activeEvent; }, [activeEvent]);
+    useEffect(() => { eventPlaylistsRef.current = eventPlaylists; }, [eventPlaylists]);
 
     const fallbackPlaylist = React.useMemo(() => [
         { title: "Lofi Study - Chill Beats", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
@@ -32,6 +40,8 @@ export const useData = () => {
         { title: "Chillhop Yearmix 2024", url: "https://www.youtube.com/watch?v=lTRiuFIWV54" },
         { title: "Morning Coffee - Smooth Jazz", url: "https://www.youtube.com/watch?v=3jWRrafhO7M" }
     ], []);
+    // Keep fallbackPlaylist ref in sync
+    useEffect(() => { fallbackPlaylistRef.current = fallbackPlaylist; }, [fallbackPlaylist]);
 
     // --- Helper: Process System State ---
     const updateSystemStateValue = useCallback((key, value) => {
@@ -144,26 +154,38 @@ export const useData = () => {
         await supabase.from('system_state').upsert({ key: 'current_playing', value: null });
     };
 
+    /**
+     * Advance to the next song.
+     * @param {boolean} forceHalt - If true, ONLY resets the processing lock without playing next.
+     *   Used when the schedule ends and we want silence, not another song.
+     */
     const handleSongEnd = useCallback((forceHalt = false) => {
-        if (processingRef.current || forceHalt) return;
+        // Always reset the lock on forceHalt so future calls can proceed
+        if (forceHalt) {
+            processingRef.current = false;
+            return;
+        }
+        if (processingRef.current) return;
         processingRef.current = true;
 
         setTimeout(() => {
-            const mode = playbackMode;
-            const eventName = activeEvent;
+            // Read latest values from refs to avoid stale closures
+            const mode = playbackModeRef.current;
+            const eventName = activeEventRef.current;
             const currentQueue = requestsRef.current;
+            const playlists = eventPlaylistsRef.current;
+            const fallback = fallbackPlaylistRef.current || [];
 
-            if (mode === 'event' && eventName && eventPlaylists[eventName]?.songs) {
-                const songsObj = eventPlaylists[eventName].songs;
+            if (mode === 'event' && eventName && playlists[eventName]?.songs) {
+                const songsObj = playlists[eventName].songs;
                 const songIds = Object.keys(songsObj);
                 if (songIds.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * songIds.length);
-                    const songId = songIds[randomIndex];
+                    const songId = songIds[Math.floor(Math.random() * songIds.length)];
                     playNextSong({
                         ...songsObj[songId],
                         id: `event_${songId}_${Date.now()}`,
                         student: `แอดมิน (โหมด${eventName})`,
-                        isEventSong: true
+                        isEventSong: true,
                     });
                     processingRef.current = false;
                     return;
@@ -173,12 +195,12 @@ export const useData = () => {
             if (currentQueue.length > 0) {
                 playNextSong(currentQueue[0]);
             } else {
-                const randomIndex = Math.floor(Math.random() * fallbackPlaylist.length);
-                playNextSong({ ...fallbackPlaylist[randomIndex], id: `autodj_${Date.now()}`, student: "Auto-DJ System", isAutoDj: true });
+                const song = fallback[Math.floor(Math.random() * fallback.length)];
+                playNextSong({ ...song, id: `autodj_${Date.now()}`, student: 'Auto-DJ System', isAutoDj: true });
             }
             processingRef.current = false;
         }, 500);
-    }, [playNextSong, fallbackPlaylist, playbackMode, activeEvent, eventPlaylists]);
+    }, [playNextSong]); // Only depends on stable playNextSong, all others via refs
 
     const addRequest = async (url, knownTitle, student = "Student") => {
         if (!isRequestsEnabled && student === "Student") throw new Error('REQUESTS_DISABLED');

@@ -896,6 +896,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     animation: heartbeat 2s ease-in-out infinite;
 }
 
+.animate-shake {
+    animation: shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.animate-infinity-core {
+    animation: infinityCore 3s ease-in-out infinite;
+}
+
+/* ── Global transition smoothness for interactive elements ── */
+button, a, input, select, [role="button"] {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ============================================================
    KEYFRAMES
    ============================================================ */
@@ -1093,11 +1106,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 @keyframes progressToast {
-    0% {
-        width: 100%
-    }
+    0% { width: 100% }
+    100% { width: 0% }
+}
 
-    100% {
-        width: 0%
-    }
+@keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX( 5px); }
+    30%, 50%, 70% { transform: translateX(-6px); }
+    40%, 60% { transform: translateX( 6px); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes infinityCore {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
 }

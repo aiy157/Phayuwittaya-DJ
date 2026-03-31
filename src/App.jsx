@@ -23,7 +23,8 @@ import ManagerDashboard from './components/views/ManagerDashboard';
 import PlayerWidget from './components/widgets/PlayerWidget';
 import QueueList from './components/widgets/QueueList';
 import Toast from './components/ui/Toast';
-import { Lock } from 'lucide-react';
+import { Lock, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { useTheme } from './context/ThemeContext';
 
 /**
  * Main Application Component
@@ -41,6 +42,11 @@ function App() {
   const [statusMessage, setStatusMessage] = useState("Loading...");
   const daysTh = React.useMemo(() => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], []);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  const [loginShake, setLoginShake] = useState(false);
+  // Prevents scheduler from calling handleSongEnd multiple times per no-song interval
+  const songEndCalledRef = useRef(false);
+
+  const { isLight } = useTheme();
 
   // Theme managed by context internally in components
 
@@ -65,7 +71,6 @@ function App() {
   }, []);
 
   // --- Scheduler ---
-
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -73,55 +78,55 @@ function App() {
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const daySchedule = schedule[dayIdx] || {};
 
-      // Check which session is currently active
-      let activeSessionKey = null;
       let activeSessionData = null;
-
       ['morning', 'noon', 'afternoon'].forEach(key => {
         const session = daySchedule[key];
-        if (session?.active && timeStr >= (session.start || "00:00") && timeStr < (session.end || "00:00")) {
-          activeSessionKey = key;
+        if (session?.active && timeStr >= (session.start || '00:00') && timeStr < (session.end || '00:00')) {
           activeSessionData = session;
         }
       });
 
-      if (!activeSessionKey) {
+      if (!activeSessionData) {
+        // System should be OFF
         if (isSystemActive) {
           setIsSystemActive(false);
           setStatusMessage(`ระบบปิดทำการ (${daysTh[dayIdx]})`);
-          stopSong(); // Halt currently playing song in Firebase
-          handleSongEnd(true); // Force HALT, do not allow next song
-          reloadPlayer(); // DOM Nuke: Guarantee 100% player shutdown
+          stopSong();
+          handleSongEnd(true); // reset lock, do NOT play next
+          reloadPlayer();
         } else if (currentSong) {
-          // If system started out of hours but Firebase had a ghost song, clear it once.
           setStatusMessage(`ระบบปิดทำการ (${daysTh[dayIdx]})`);
           stopSong();
         }
+        songEndCalledRef.current = false; // reset for next active window
       } else {
+        // System should be ON
         if (!isSystemActive) {
           setIsSystemActive(true);
+          songEndCalledRef.current = false;
         }
 
-        // Auto-switch playback mode based on schedule
         const scheduledMode = activeSessionData.mode || 'queue';
         const scheduledEvent = activeSessionData.targetEvent || null;
-
         if (playbackMode !== scheduledMode || activeEvent !== scheduledEvent) {
           setPlaybackMode(scheduledMode, scheduledEvent);
         }
 
         if (currentSong) {
-          setStatusMessage(currentSong.isAutoDj ? "ระบบ Auto-DJ (กำลังเล่นเพลงสำรอง)" : "กำลังออกอากาศ...");
+          songEndCalledRef.current = false;
+          setStatusMessage(currentSong.isAutoDj ? 'ระบบ Auto-DJ (กำลังเล่นเพลงสำรอง)' : 'กำลังออกอากาศ...');
         } else {
-          setStatusMessage(requests.length > 0 ? "กำลังเตรียมเพลงถัดไป..." : "กำลังเริ่มระบบ Auto-DJ...");
-          // Only trigger next song if system is active (double check)
-          handleSongEnd();
+          setStatusMessage(requests.length > 0 ? 'กำลังเตรียมเพลงถัดไป...' : 'กำลังเริ่มระบบ Auto-DJ...');
+          // Only call once per no-song window to avoid processingRef deadlock
+          if (!songEndCalledRef.current) {
+            songEndCalledRef.current = true;
+            handleSongEnd();
+          }
         }
       }
     }, 1000);
     return () => clearInterval(timer);
   }, [schedule, currentSong, requests, handleSongEnd, playbackMode, activeEvent, setPlaybackMode, isSystemActive, reloadPlayer, daysTh, stopSong]);
-
 
   // --- Helper Functions ---
 
@@ -183,6 +188,8 @@ function App() {
       setPasswordInput('');
     } else {
       showToast('รหัสผ่านไม่ถูกต้อง 🔒', 'error');
+      setLoginShake(true);
+      setTimeout(() => setLoginShake(false), 600);
     }
   };
 
@@ -214,54 +221,126 @@ function App() {
       )}
 
       {viewMode === 'manager' && !isAuthenticated && (
-        <div className="flex items-center justify-center py-16 sm:py-24 animate-fade-in">
-          {/* Gradient border wrapper */}
-          <div className="p-[1.5px] rounded-[34px] w-full max-w-sm"
-            style={{ background: 'linear-gradient(135deg,rgba(59,130,246,0.70),rgba(139,92,246,0.60),rgba(244,63,94,0.50))' }}>
-            <div className="text-center rounded-[33px] px-8 py-10"
+        <div className="flex items-center justify-center min-h-[80vh] px-4 animate-fade-in">
+          <div
+            className={`relative w-full max-w-[400px] ${loginShake ? 'animate-shake' : ''}`}
+            style={{ transition: 'transform 0.15s' }}
+          >
+            {/* Background glow orbs — theme-aware */}
+            <div className="absolute -top-20 -left-20 w-56 h-56 rounded-full blur-3xl pointer-events-none"
+              style={{ background: isLight ? 'rgba(99,102,241,0.18)' : 'rgba(139,92,246,0.25)' }} />
+            <div className="absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-3xl pointer-events-none"
+              style={{ background: isLight ? 'rgba(236,72,153,0.14)' : 'rgba(244,63,94,0.20)' }} />
+
+            {/* Card */}
+            <div
+              className="relative rounded-[32px] overflow-hidden"
               style={{
-                background: 'rgba(6,11,24,0.95)',
-                backdropFilter: 'blur(32px)',
-                WebkitBackdropFilter: 'blur(32px)',
-              }}>
-              {/* Top glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-3/5"
-                style={{ background: 'linear-gradient(90deg,transparent,rgba(167,139,250,0.80),transparent)' }} />
+                background: isLight
+                  ? 'rgba(255,255,255,0.72)'
+                  : 'rgba(10,14,28,0.85)',
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                boxShadow: isLight
+                  ? '0 8px 60px rgba(99,102,241,0.14), 0 2px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)'
+                  : '0 8px 60px rgba(139,92,246,0.22), 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+                border: isLight
+                  ? '1.5px solid rgba(99,102,241,0.18)'
+                  : '1.5px solid rgba(139,92,246,0.25)',
+              }}
+            >
+              {/* Rainbow shimmer line at top */}
+              <div className="h-[2px] w-full"
+                style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6,#ec4899,#f43f5e,#8b5cf6,#6366f1)' }} />
 
-              {/* Animated gradient icon */}
-              <div className="inline-flex p-4 rounded-[22px] mb-6 relative overflow-hidden"
-                style={{
-                  background: 'linear-gradient(145deg,#3b82f6,#8b5cf6,#f43f5e)',
-                  boxShadow: '0 0 48px rgba(139,92,246,0.70), 0 8px 24px rgba(59,130,246,0.40)',
-                }}>
-                <Lock size={28} className="text-white relative z-10" />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg,rgba(255,255,255,0.28) 0%,transparent 55%)' }} />
+              <div className="px-8 py-10 text-center">
+                {/* Icon */}
+                <div className="relative inline-flex mb-7">
+                  {/* Outer pulse ring */}
+                  <div className="absolute inset-0 rounded-full animate-ping opacity-20"
+                    style={{ background: 'radial-gradient(circle,#8b5cf6,transparent)', animationDuration: '2.5s' }} />
+                  <div
+                    className="relative w-[72px] h-[72px] rounded-[22px] flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(145deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
+                      boxShadow: isLight
+                        ? '0 12px 32px rgba(99,102,241,0.40), inset 0 2px 4px rgba(255,255,255,0.35)'
+                        : '0 12px 40px rgba(139,92,246,0.60), inset 0 2px 4px rgba(255,255,255,0.25)',
+                    }}
+                  >
+                    <Lock size={30} className="text-white drop-shadow-lg" strokeWidth={2.2} />
+                    <div className="absolute inset-0 rounded-[22px]"
+                      style={{ background: 'linear-gradient(145deg,rgba(255,255,255,0.30) 0%,transparent 60%)' }} />
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h2
+                  className="text-[22px] font-black mb-1.5 tracking-tight"
+                  style={{ color: isLight ? '#0f172a' : 'rgba(255,255,255,0.95)' }}
+                >
+                  ระบบสำหรับผู้ดูแล
+                </h2>
+                <p
+                  className="text-[13px] font-medium mb-8"
+                  style={{ color: isLight ? '#64748b' : 'rgba(255,255,255,0.38)' }}
+                >
+                  กรุณาระบุรหัสผ่านเพื่อเข้าใช้งาน
+                </p>
+
+                {/* Password input */}
+                <div className="relative mb-4 group">
+                  <div
+                    className="absolute inset-0 rounded-[14px] opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity duration-300"
+                    style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899)', padding: '2px' }}
+                  />
+                  <input
+                    type="password"
+                    placeholder="รหัสผ่าน"
+                    className="relative w-full px-5 py-4 rounded-[14px] text-center text-[15px] font-bold transition-all duration-200 focus:outline-none"
+                    style={{
+                      background: isLight ? 'rgba(241,245,249,0.90)' : 'rgba(255,255,255,0.06)',
+                      color: isLight ? '#0f172a' : 'rgba(255,255,255,0.90)',
+                      border: isLight
+                        ? '1.5px solid rgba(99,102,241,0.20)'
+                        : '1.5px solid rgba(255,255,255,0.10)',
+                      boxShadow: isLight ? 'inset 0 2px 4px rgba(0,0,0,0.04)' : 'inset 0 2px 6px rgba(0,0,0,0.30)',
+                    }}
+                    value={passwordInput}
+                    onChange={e => setPasswordInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
+                  />
+                </div>
+
+                {/* Login button */}
+                <button
+                  onClick={handleAdminLogin}
+                  className="w-full py-4 rounded-[14px] text-[15px] font-black text-white transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899)',
+                    boxShadow: isLight
+                      ? '0 6px 24px rgba(99,102,241,0.38), 0 2px 8px rgba(236,72,153,0.20)'
+                      : '0 6px 28px rgba(139,92,246,0.50), 0 2px 10px rgba(236,72,153,0.25)',
+                  }}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <ShieldCheck size={18} strokeWidth={2.5} />
+                    เข้าสู่ระบบ
+                  </span>
+                </button>
+
+                {/* Back link */}
+                <button
+                  onClick={() => setViewMode('student')}
+                  className="mt-6 flex items-center justify-center gap-1.5 mx-auto text-[12px] font-semibold transition-all duration-200 hover:gap-2.5 active:scale-95"
+                  style={{ color: isLight ? '#94a3b8' : 'rgba(255,255,255,0.28)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = isLight ? '#6366f1' : 'rgba(167,139,250,0.90)'}
+                  onMouseLeave={e => e.currentTarget.style.color = isLight ? '#94a3b8' : 'rgba(255,255,255,0.28)'}
+                >
+                  <ArrowLeft size={13} />
+                  <span>กลับสู่หน้านักเรียน</span>
+                </button>
               </div>
-
-              <h2 className="text-[23px] font-black mb-1 text-white">ระบบสำหรับผู้ดูแล</h2>
-              <p className="text-[13px] mb-8" style={{ color: 'rgba(255,255,255,0.35)' }}>กรุณาระบุรหัสผ่านเพื่อเข้าใช้งาน</p>
-
-              <input
-                type="password" placeholder="รหัสผ่าน"
-                className="input-premium w-full px-5 py-4 rounded-[16px] mb-4 text-center text-[15px] font-semibold"
-                value={passwordInput} onChange={e => setPasswordInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAdminLogin()}
-              />
-              <button onClick={handleAdminLogin}
-                className="btn-primary w-full py-4 rounded-[16px] text-[15px] font-black">
-                เข้าสู่ระบบ 🚀
-              </button>
-              <button
-                onClick={() => setViewMode('student')}
-                className="
-                  mt-5 text-[12px] font-semibold
-                  text-white/28 hover:text-violet-400
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/70 focus-visible:rounded
-                  active:scale-95 transition-all duration-200
-                "
-              >
-                ← กลับสู่หน้านักเรียน
-              </button>
             </div>
           </div>
         </div>
