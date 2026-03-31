@@ -174,8 +174,10 @@ const StudentView = ({
             </div>
 
             <div className="w-full max-w-[640px] relative z-20">
-                {/* ── INPUT BLOCK ── */}
-                <div className={`transition-all duration-300 ${!isRequestsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* ── INPUT BLOCK ── */}
+            <div className={`transition-all duration-300 ${!isRequestsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                {/* Relative wrapper — anchors the dropdown correctly below the input box */}
+                <div className="relative">
                     {/* Glowing thick gradient border wrapper */}
                     <div className={`p-[2px] rounded-[24px] sm:rounded-[30px] transition-all duration-500 ${isLight ? 'shadow-[0_8px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_60px_rgba(59,130,246,0.15)]' : 'shadow-[0_8px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_60px_rgba(139,92,246,0.3)]'}`}
                          style={{ background: isLight ? 'linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.4))' : 'linear-gradient(135deg, rgba(59,130,246,0.8), rgba(139,92,246,0.6), rgba(244,63,94,0.5))' }}>
@@ -197,7 +199,7 @@ const StudentView = ({
                                 className={`w-full pl-11 sm:pl-16 pr-[100px] sm:pr-32 py-4 sm:py-6 rounded-[22px] sm:rounded-[28px] text-[15px] sm:text-[18px] font-bold transition-all duration-300 focus:outline-none focus:ring-[4px] focus:ring-purple-500/20 bg-transparent ${isLight ? 'text-gray-900 placeholder-gray-500/80' : 'text-white placeholder-gray-400/80'}`}
                                 value={songUrl}
                                 onChange={e => handleInputChange(e.target.value)}
-                                onBlur={clearSuggestions}
+                                onBlur={() => setTimeout(clearSuggestions, 150)}
                                 disabled={isBusy || !isRequestsEnabled}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter') { clearSuggestions(); isUrlInput ? onSubmit() : doSearch(showToast); }
@@ -220,25 +222,26 @@ const StudentView = ({
                                 {!isBusy && !submitSuccess && (isUrlInput ? <Send size={16} strokeWidth={2.5} className="sm:hidden"/> : <Search size={16} strokeWidth={2.5} className="sm:hidden" />)}
                             </button>
                         </div>
-                        
-                        {/* Suggestion dropdown (Rendered relatively within wrapper for flawless floating) */}
-                        {suggestions.length > 0 && !isUrlInput && !isBusy && (
-                            <div className="absolute top-[calc(100%+8px)] w-full z-50">
-                               <SuggestionDropdown
-                                   suggestions={suggestions}
-                                   onSelect={(s) => { doSearch(showToast, s); }}
-                               />
-                            </div>
-                        )}
                     </div>
 
-                    {/* Duration hint */}
-                    {maxSongDuration > 0 && isRequestsEnabled && (
-                        <p className={`text-center text-[12px] sm:text-[13px] font-semibold mt-4 sm:mt-5 flex items-center justify-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
-                            รองรับความยาวไม่เกิน {maxSongDuration} นาที
-                        </p>
+                    {/* Suggestion dropdown — anchored to the search box via position:absolute on a relative parent */}
+                    {suggestions.length > 0 && !isUrlInput && !isBusy && (
+                        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50">
+                           <SuggestionDropdown
+                               suggestions={suggestions}
+                               onSelect={(s) => { doSearch(showToast, s); }}
+                           />
+                        </div>
                     )}
                 </div>
+
+                {/* Duration hint */}
+                {maxSongDuration > 0 && isRequestsEnabled && (
+                    <p className={`text-center text-[12px] sm:text-[13px] font-semibold mt-4 sm:mt-5 flex items-center justify-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+                        รองรับความยาวไม่เกิน {maxSongDuration} นาที
+                    </p>
+                )}
+            </div>
 
                 {/* ── SEARCH RESULTS ── */}
                 {searchResults.length > 0 && (

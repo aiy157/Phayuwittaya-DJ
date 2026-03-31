@@ -7,6 +7,7 @@ export const useSearchState = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const suggestTimerRef = useRef(null);
+    const autoSearchTimerRef = useRef(null);
 
     const isUrlInput = getYouTubeID(songUrl) !== null;
 
@@ -14,14 +15,29 @@ export const useSearchState = () => {
     const handleInputChange = useCallback((value) => {
         setSongUrl(value);
         clearTimeout(suggestTimerRef.current);
+        clearTimeout(autoSearchTimerRef.current);
+        setSearchResults([]);
+
         if (getYouTubeID(value) || value.trim().length < 2) {
             setSuggestions([]);
             return;
         }
+        // Auto-complete suggestions: 300ms debounce
         suggestTimerRef.current = setTimeout(async () => {
             const results = await getYouTubeSuggestions(value);
             setSuggestions(results);
         }, 300);
+        // Auto-search results: 700ms debounce (shows results without pressing button)
+        autoSearchTimerRef.current = setTimeout(async () => {
+            setSuggestions([]);
+            setIsSearching(true);
+            try {
+                const results = await searchYouTube(value.trim());
+                setSearchResults(results);
+            } catch { /* silent */ } finally {
+                setIsSearching(false);
+            }
+        }, 700);
     }, []);
 
     const clearSuggestions = useCallback(() => setSuggestions([]), []);
@@ -45,8 +61,11 @@ export const useSearchState = () => {
         }
     }, [songUrl]);
 
-    // Cleanup debounce timer on unmount
-    useEffect(() => () => clearTimeout(suggestTimerRef.current), []);
+    // Cleanup debounce timers on unmount
+    useEffect(() => () => {
+        clearTimeout(suggestTimerRef.current);
+        clearTimeout(autoSearchTimerRef.current);
+    }, []);
 
     return {
         songUrl, setSongUrl, handleInputChange,
