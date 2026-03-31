@@ -246,7 +246,16 @@ export const useData = () => {
     };
 
     const updateSchedule = async (newSchedule) => {
-        await supabase.from('system_state').upsert({ key: 'schedule', value: newSchedule });
+        try {
+            const { error } = await supabase.from('system_state').upsert({ key: 'schedule', value: newSchedule });
+            if (error) {
+                console.error("[useData] updateSchedule failed:", error);
+                throw error;
+            }
+        } catch (err) {
+            console.error("[useData] updateSchedule catch:", err);
+            throw err;
+        }
     };
 
     const addEventPlaylist = async (eventName) => {

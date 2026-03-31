@@ -279,7 +279,7 @@ function App() {
           requests={requests}
           isRequestsEnabled={isRequestsEnabled}
           toggleRequestLock={toggleRequestLock}
-          handleSaveSchedule={() => { updateSchedule(schedule).then(() => showToast('บันทึกตารางเวลาแล้ว', 'success')); }}
+          handleSaveSchedule={(newSched) => { updateSchedule(newSched || schedule).then(() => showToast('บันทึกตารางเวลาแล้ว', 'success')); }}
           selectedDay={selectedDay}
           setSelectedDay={setSelectedDay}
           schedule={schedule}

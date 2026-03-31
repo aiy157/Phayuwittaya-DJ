@@ -64,7 +64,7 @@ const AppShell = ({ children }) => {
       {/* ── Interactive Mouse Follower Orb ── */}
       <div 
         ref={spotlightRef}
-        className="pointer-events-none fixed top-0 left-0 w-[44px] h-[44px] z-[9999]"
+        className="pointer-events-none fixed top-0 left-0 w-[20px] h-[20px] z-[1]"
         style={{
             willChange: 'transform',
             transition: 'opacity 0.3s' // Removed transform transition to allow JS lerping to handle smoothness without CSS conflicts
@@ -144,13 +144,13 @@ const AppShell = ({ children }) => {
         {isLight ? (
             // LIGHT THEME BACKGROUNDS (Vivid Pastel Dream)
             <div className="absolute inset-0 bg-[#f8fafc] transition-colors duration-700">
-                <div className="absolute top-[-10%] left-[-10%] w-[120vw] h-[120vw] md:w-[60vw] md:h-[60vw] max-w-[1000px] max-h-[1000px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(96,165,250,0.95) 0%, transparent 65%)' }} />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[130vw] h-[130vw] md:w-[70vw] md:h-[70vw] max-w-[1100px] max-h-[1100px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.95) 0%, transparent 65%)', animationDelay: '-5s' }} />
-                <div className="absolute top-[20%] right-[0%] w-[110vw] h-[110vw] md:w-[55vw] md:h-[55vw] max-w-[900px] max-h-[900px] rounded-full animate-float-rev" style={{ background: 'radial-gradient(circle, rgba(244,114,182,0.85) 0%, transparent 70%)', animationDelay: '-10s' }} />
-                <div className="absolute bottom-[20%] left-[0%] w-[110vw] h-[110vw] md:w-[55vw] md:h-[55vw] max-w-[900px] max-h-[900px] rounded-full animate-float-slow" style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.75) 0%, transparent 60%)', animationDelay: '-7s' }} />
+                <div className="absolute top-[-10%] left-[-10%] w-[120vw] h-[120vw] md:w-[60vw] md:h-[60vw] max-w-[1000px] max-h-[1000px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(96,165,250,0.4) 0%, transparent 65%)' }} />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[130vw] h-[130vw] md:w-[70vw] md:h-[70vw] max-w-[1100px] max-h-[1100px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.4) 0%, transparent 65%)', animationDelay: '-5s' }} />
+                <div className="absolute top-[20%] right-[0%] w-[110vw] h-[110vw] md:w-[55vw] md:h-[55vw] max-w-[900px] max-h-[900px] rounded-full animate-float-rev" style={{ background: 'radial-gradient(circle, rgba(244,114,182,0.3) 0%, transparent 70%)', animationDelay: '-10s' }} />
+                <div className="absolute bottom-[20%] left-[0%] w-[110vw] h-[110vw] md:w-[55vw] md:h-[55vw] max-w-[900px] max-h-[900px] rounded-full animate-float-slow" style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.2) 0%, transparent 60%)', animationDelay: '-7s' }} />
                 
                 {/* Core Illuminator - Reduced white washout significantly */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160vw] h-[80vh] md:w-[120vw] md:h-[60vh] max-w-[1500px] max-h-[1000px] rounded-[100%] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 75%)' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160vw] h-[80vh] md:w-[120vw] md:h-[60vh] max-w-[1500px] max-h-[1000px] rounded-[100%] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 40%, transparent 75%)' }} />
 
                 {/* Fireflies / Pollen */}
                 {fireflies.map((fl, i) => (
@@ -168,12 +168,12 @@ const AppShell = ({ children }) => {
         ) : (
             // DARK THEME BACKGROUNDS (Deep Soft Neon Pastel)
             <div className="absolute inset-0 bg-[#060b18] transition-colors duration-700">
-                <div className="absolute top-[-10%] left-[-10%] w-[120vw] h-[120vw] md:w-[60vw] md:h-[60vw] max-w-[900px] max-h-[900px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(129,140,248,0.25) 0%, transparent 65%)' }} />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[130vw] h-[130vw] md:w-[70vw] md:h-[70vw] max-w-[1000px] max-h-[1000px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.25) 0%, transparent 65%)', animationDelay: '-5s' }} />
-                <div className="absolute top-[20%] right-[0%] w-[110vw] h-[110vw] md:w-[50vw] md:h-[50vw] max-w-[800px] max-h-[800px] rounded-full animate-float-rev" style={{ background: 'radial-gradient(circle, rgba(244,114,182,0.15) 0%, transparent 70%)', animationDelay: '-10s' }} />
-                <div className="absolute bottom-[20%] left-[0%] w-[110vw] h-[110vw] md:w-[50vw] md:h-[50vw] max-w-[800px] max-h-[800px] rounded-full animate-float-slow" style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.1) 0%, transparent 60%)', animationDelay: '-7s' }} />
+                <div className="absolute top-[-10%] left-[-10%] w-[120vw] h-[120vw] md:w-[60vw] md:h-[60vw] max-w-[900px] max-h-[900px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(129,140,248,0.15) 0%, transparent 65%)' }} />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[130vw] h-[130vw] md:w-[70vw] md:h-[70vw] max-w-[1000px] max-h-[1000px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(192,132,252,0.15) 0%, transparent 65%)', animationDelay: '-5s' }} />
+                <div className="absolute top-[20%] right-[0%] w-[110vw] h-[110vw] md:w-[50vw] md:h-[50vw] max-w-[800px] max-h-[800px] rounded-full animate-float-rev" style={{ background: 'radial-gradient(circle, rgba(244,114,182,0.1) 0%, transparent 70%)', animationDelay: '-10s' }} />
+                <div className="absolute bottom-[20%] left-[0%] w-[110vw] h-[110vw] md:w-[50vw] md:h-[50vw] max-w-[800px] max-h-[800px] rounded-full animate-float-slow" style={{ background: 'radial-gradient(circle, rgba(94,234,212,0.05) 0%, transparent 60%)', animationDelay: '-7s' }} />
                 {/* Core Dark Absorber */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160vw] h-[80vh] md:w-[120vw] md:h-[60vh] max-w-[1500px] max-h-[1000px] rounded-[100%] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(15,23,42,0.85) 0%, transparent 70%)' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160vw] h-[80vh] md:w-[120vw] md:h-[60vh] max-w-[1500px] max-h-[1000px] rounded-[100%] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(15,23,42,0.45) 0%, transparent 70%)' }} />
                 
                 {/* Soft backdrop */}
                 <div className="absolute inset-0 bg-slate-950/40" />

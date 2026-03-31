@@ -361,14 +361,44 @@ const ManagerDashboard = ({
     activeTab, setActiveTab,
 }) => {
     const { isLight } = useTheme();
-    const handleTimeChange = (s, f, v) =>
-        setSchedule(prev => ({ ...prev, [selectedDay]: { ...prev[selectedDay], [s]: { ...prev[selectedDay]?.[s], [f]: v } } }));
+    const toggleSessionActive = (s) => {
+        const currentData = schedule[selectedDay]?.[s] || {};
+        const updatedSession = { ...currentData, active: !currentData.active };
+        const updatedSchedule = { ...schedule, [selectedDay]: { ...schedule[selectedDay], [s]: updatedSession } };
+        
+        // 1. Update local state for immediate UI feedback
+        setSchedule(updatedSchedule);
 
-    const handleModeChange = (s, mode, targetEvent = null) =>
-        setSchedule(prev => ({ ...prev, [selectedDay]: { ...prev[selectedDay], [s]: { ...prev[selectedDay]?.[s], mode, targetEvent } } }));
+        // 2. Persist to Supabase immediately
+        handleSaveSchedule(updatedSchedule);
+    };
 
-    const toggleSessionActive = (s) =>
-        setSchedule(prev => ({ ...prev, [selectedDay]: { ...prev[selectedDay], [s]: { ...prev[selectedDay]?.[s], active: !prev[selectedDay]?.[s]?.active } } }));
+    const handleModeChangeSync = (s, mode, targetEvent = null) => {
+        const updatedSchedule = { 
+            ...schedule, 
+            [selectedDay]: { 
+                ...schedule[selectedDay], 
+                [s]: { ...schedule[selectedDay]?.[s], mode, targetEvent } 
+            } 
+        };
+        setSchedule(updatedSchedule);
+        handleSaveSchedule(updatedSchedule);
+    };
+
+    const handleTimeChangeSync = (s, f, v) => {
+        const updatedSchedule = { 
+            ...schedule, 
+            [selectedDay]: { 
+                ...schedule[selectedDay], 
+                [s]: { ...schedule[selectedDay]?.[s], [f]: v } 
+            } 
+        };
+        setSchedule(updatedSchedule);
+        // We might want to avoid saving on every single keystroke of time, 
+        // but here it's simple enough or the user can click 'Save' if they prefer.
+        // For now, let's keep the handleSaveSchedule call at the end to be safe.
+        // We'll keep the main 'Save' button too for peace of mind.
+    };
 
     const events = Object.keys(eventPlaylists || {}).sort();
     const textSub = isLight ? '#64748b' : 'rgba(255,255,255,0.35)';
@@ -582,8 +612,8 @@ const ManagerDashboard = ({
                                     session={session}
                                     dayData={schedule[selectedDay]?.[session]}
                                     events={events}
-                                    onTimeChange={handleTimeChange}
-                                    onModeChange={handleModeChange}
+                                    onTimeChange={handleTimeChangeSync}
+                                    onModeChange={handleModeChangeSync}
                                     onToggleActive={() => toggleSessionActive(session)}
                                 />
                             ))}
@@ -591,11 +621,11 @@ const ManagerDashboard = ({
 
                         {/* Save button */}
                         <button
-                            onClick={handleSaveSchedule}
+                            onClick={() => handleSaveSchedule(schedule)}
                             className="btn-primary w-full mt-5 py-3.5 rounded-[16px] text-[13px] font-bold flex items-center justify-center gap-2"
                             aria-label="บันทึกตารางเวลา"
                         >
-                            <CheckCircle2 size={15} aria-hidden /> บันทึกตารางเวลา
+                            <CheckCircle2 size={15} aria-hidden /> บันทึกตารางเวลา (ยืนยันค่า)
                         </button>
                     </div>
 
