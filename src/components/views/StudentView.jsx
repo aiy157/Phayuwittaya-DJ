@@ -136,8 +136,11 @@ const StudentView = ({
     };
 
     const { isLight } = useTheme();
-    const isBusy = isSubmitting || isSearching || localSubmitting;
-    const isDisabled = isBusy || !songUrl || !isRequestsEnabled;
+    // isBusy tracks if we are actually 'busy' with a transaction (submitting)
+    const isBusy = isSubmitting || localSubmitting;
+    // isWaiting tracks both submission and background searching for UI indicators (spinners)
+    const isWaiting = isBusy || isSearching;
+    const isDisabled = isBusy || !isRequestsEnabled;
 
     return (
         <div className="flex flex-col items-center pt-8 sm:pt-16 pb-32 min-h-[80vh] animate-fade-in relative z-10 w-full px-4 sm:px-6">
@@ -215,11 +218,11 @@ const StudentView = ({
                                 disabled={isDisabled}
                                 className={`absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 px-4 sm:px-5 py-2.5 sm:py-3.5 rounded-[16px] sm:rounded-[20px] font-bold text-[13px] sm:text-[15px] flex items-center justify-center gap-2 transition-all active:scale-95 ${isDisabled ? (isLight ? 'bg-white/50 text-gray-400 shadow-inner' : 'bg-white/5 text-gray-600 shadow-inner') : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-purple-500/40'}`}
                             >
-                                {isBusy && <Loader2 className="animate-spin" size={16} aria-hidden />}
-                                {!isBusy && submitSuccess && <CheckCircle2 size={16} aria-hidden />}
-                                {!isBusy && !submitSuccess && isUrlInput && <span className="hidden sm:block">เพิ่มเพลง</span>}
-                                {!isBusy && !submitSuccess && !isUrlInput && <span className="hidden sm:block">ค้นหา</span>}
-                                {!isBusy && !submitSuccess && (isUrlInput ? <Send size={16} strokeWidth={2.5} className="sm:hidden"/> : <Search size={16} strokeWidth={2.5} className="sm:hidden" />)}
+                                {isWaiting && <Loader2 className="animate-spin" size={16} aria-hidden />}
+                                {!isWaiting && submitSuccess && <CheckCircle2 size={16} aria-hidden />}
+                                {!isWaiting && !submitSuccess && isUrlInput && <span className="hidden sm:block">เพิ่มเพลง</span>}
+                                {!isWaiting && !submitSuccess && !isUrlInput && <span className="hidden sm:block">ค้นหา</span>}
+                                {!isWaiting && !submitSuccess && (isUrlInput ? <Send size={16} strokeWidth={2.5} className="sm:hidden"/> : <Search size={16} strokeWidth={2.5} className="sm:hidden" />)}
                             </button>
                         </div>
                     </div>
