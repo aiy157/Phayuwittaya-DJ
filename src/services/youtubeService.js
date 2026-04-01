@@ -44,15 +44,20 @@ export const fetchVideoDetails = async (input) => {
 /**
  * Fetches real-time suggestions from YouTube's own Suggest API.
  */
-export const getYouTubeSuggestions = async (query) => {
+export const getYouTubeSuggestions = async (query, signal) => {
     if (!query || query.trim().length < 2) return [];
     try {
         const apiUrl = `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`;
-        // corsproxy blocked web.app, allorigins blocks IP. CodeTabs works anywhere 100% free
-        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`, { signal: AbortSignal.timeout(4000) });
+        // Combine caller signal with internal 4s timeout
+        const combinedSignal = signal 
+            ? AbortSignal.any([signal, AbortSignal.timeout(4000)])
+            : AbortSignal.timeout(4000);
+
+        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`, { signal: combinedSignal });
         const data = await res.json();
         return Array.isArray(data[1]) ? data[1].slice(0, 8) : [];
-    } catch {
+    } catch (err) {
+        if (err.name === 'AbortError') throw err;
         return [];
     }
 };
@@ -116,7 +121,7 @@ const parseInvidious = (data = []) =>
 
 // ─── Strategy 1: YouTube HTML scrape via CORS proxy (Most Reliable for GET) ─────────────
 
-const searchScrape = async (query, timeout) => {
+const searchScrape = async (query, timeout, signal) => {
     const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&gl=TH`;
     const proxies = [
         `https://api.allow-any-origin.appspot.com/${ytUrl}`,          // Extremely fast Google Cloud proxy
@@ -126,7 +131,11 @@ const searchScrape = async (query, timeout) => {
 
     for (const proxy of proxies) {
         try {
-            const res = await fetch(proxy, { signal: AbortSignal.timeout(timeout) });
+            const combinedSignal = signal 
+                ? AbortSignal.any([signal, AbortSignal.timeout(timeout)])
+                : AbortSignal.timeout(timeout);
+
+            const res = await fetch(proxy, { signal: combinedSignal });
             if (!res.ok) continue;
             const ct = res.headers.get('content-type') || '';
             let html = ct.includes('json') ? (await res.json()).contents || '' : await res.text();
@@ -175,11 +184,14 @@ const INVIDIOUS = [
     'https://invidious.privacyredirect.com'
 ];
 
-const searchAltFrontends = async (query, timeout) => {
+const searchAltFrontends = async (query, timeout, signal) => {
     const q = encodeURIComponent(query);
     const pipedReqs = PIPED.map(async b => {
-        // Removed filter=videos because it returns 400 Bad Request on many servers!
-        const r = await fetch(`${b}/search?q=${q}`, { signal: AbortSignal.timeout(timeout) });
+        const combinedSignal = signal 
+            ? AbortSignal.any([signal, AbortSignal.timeout(timeout)])
+            : AbortSignal.timeout(timeout);
+
+        const r = await fetch(`${b}/search?q=${q}`, { signal: combinedSignal });
         if (!r.ok) throw new Error();
         const j = await r.json();
         const res = parsePiped(j.items || []);
@@ -187,7 +199,11 @@ const searchAltFrontends = async (query, timeout) => {
         return res;
     });
     const invReqs = INVIDIOUS.map(async b => {
-        const r = await fetch(`${b}/api/v1/search?q=${q}&type=video`, { signal: AbortSignal.timeout(timeout) });
+        const combinedSignal = signal 
+            ? AbortSignal.any([signal, AbortSignal.timeout(timeout)])
+            : AbortSignal.timeout(timeout);
+
+        const r = await fetch(`${b}/api/v1/search?q=${q}&type=video`, { signal: combinedSignal });
         if (!r.ok) throw new Error();
         const d = await r.json();
         const res = parseInvidious(Array.isArray(d) ? d : []);
@@ -203,7 +219,7 @@ const CORS_PROXIES = [
     (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, // Note: allorigins often strips POST, acting as fallback
 ];
 
-const searchInnerTube = async (query, timeout) => {
+const searchInnerTube = async (query, timeout, signal) => {
     const apiUrl = `https://www.youtube.com/youtubei/v1/search?key=${YT_KEY}&prettyPrint=false`;
     const body = JSON.stringify({
         context: { client: { clientName: 'WEB', clientVersion: YT_CLIENT_VER, hl: 'th', gl: 'TH' } },
@@ -213,11 +229,15 @@ const searchInnerTube = async (query, timeout) => {
 
     for (const makeProxy of CORS_PROXIES) {
         try {
+            const combinedSignal = signal 
+                ? AbortSignal.any([signal, AbortSignal.timeout(timeout)])
+                : AbortSignal.timeout(timeout);
+
             const res = await fetch(makeProxy(apiUrl), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body,
-                signal: AbortSignal.timeout(timeout),
+                signal: combinedSignal,
             });
             if (!res.ok) continue;
             const text = await res.text();
@@ -237,30 +257,34 @@ const searchInnerTube = async (query, timeout) => {
 
 /**
  * Searches YouTube using a 3-tier fallback strategy.
- * 1. HTML page scrape via GET CORS proxy (100% reliable in Production)
- * 2. Piped + Invidious alt-frontend race
- * 3. YouTube's own InnerTube API via POST CORS proxy
  */
-export const searchYouTube = async (query) => {
+export const searchYouTube = async (query, signal) => {
     if (!query?.trim()) return [];
     const q = query.trim();
 
     // ── Tier 1: Scrape (Safest for Production CORS) ─────────────────────────
     try {
-        const r = await searchScrape(q, 7000);
+        const r = await searchScrape(q, 7000, signal);
         if (r.length) return r;
-    } catch (e) { console.warn("Tier 1 scrape failed", e) }
+    } catch (e) { 
+        if (e.name === 'AbortError') throw e;
+        console.warn("Tier 1 scrape failed", e);
+    }
 
     // ── Tier 2: Alt frontends ────────────────────────────────────────────────
     try {
-        const r = await searchAltFrontends(q, 6000);
+        const r = await searchAltFrontends(q, 6000, signal);
         if (r.length) return r;
-    } catch (e) { console.warn("Tier 2 alt frontends failed", e) }
+    } catch (e) { 
+        if (e.name === 'AbortError') throw e;
+        console.warn("Tier 2 alt frontends failed", e);
+    }
 
     // ── Tier 3: InnerTube ────────────────────────────────────────────────────
     try {
-        return await searchInnerTube(q, 6000);
-    } catch {
+        return await searchInnerTube(q, 6000, signal);
+    } catch (e) {
+        if (e.name === 'AbortError') throw e;
         console.error('[searchYouTube] All search methods failed for:', q);
         return [];
     }
