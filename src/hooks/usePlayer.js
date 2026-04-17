@@ -41,9 +41,11 @@ if (typeof window !== 'undefined' && !window.__ytApiDispatcherSet) {
  * @param {boolean} isSystemActive - Boolean deciding if the component is allowed to play media
  * @returns {Object} { isPlayerReady, duration, currentTime, reloadPlayer }
  */
-export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true) => {
+export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true, serverTimeOffset = 0) => {
     const playerRef = useRef(null);
+    const activeVideoIdRef = useRef(null);
     const isSystemActiveRef = useRef(isSystemActive);
+    const serverTimeOffsetRef = useRef(serverTimeOffset);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -54,23 +56,60 @@ export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true)
     const onSongEndRef = useRef(onSongEnd);
 
     useEffect(() => { isSystemActiveRef.current = isSystemActive; }, [isSystemActive]);
+    useEffect(() => { serverTimeOffsetRef.current = serverTimeOffset; }, [serverTimeOffset]);
     useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
     useEffect(() => { volumeRef.current = volume; }, [volume]);
     useEffect(() => { onSongEndRef.current = onSongEnd; }, [onSongEnd]);
 
     // Sync Song — uses refs, so no external deps needed
     const syncSong = useCallback((song, playerInstance) => {
-        if (!isSystemActiveRef.current || !song || !song.url) return;
+        if (!isSystemActiveRef.current || !song || !song.url) {
+            activeVideoIdRef.current = null;
+            return;
+        }
 
         const player = playerInstance || playerRef.current;
         if (player && typeof player.loadVideoById === 'function') {
             const videoId = getYouTubeID(song.url);
             if (videoId) {
-                const secondsPassed = (Date.now() - song.startedAt) / 1000;
-                player.loadVideoById({
-                    videoId: videoId,
-                    startSeconds: secondsPassed > 0 ? secondsPassed : 0
-                });
+                const absoluteNow = Date.now() + serverTimeOffsetRef.current;
+                let startSeconds = 0;
+                
+                if (song.isPlaying === false && song.pausedTime !== undefined) {
+                    startSeconds = song.pausedTime;
+                } else {
+                    startSeconds = (absoluteNow - (song.startedAt || absoluteNow)) / 1000;
+                }
+                
+                // If new song: load it
+                if (activeVideoIdRef.current !== videoId) {
+                    activeVideoIdRef.current = videoId;
+                    player.loadVideoById({
+                        videoId: videoId,
+                        startSeconds: startSeconds > 0 ? startSeconds : 0
+                    });
+                    if (song.isPlaying === false) {
+                        setTimeout(() => player.pauseVideo && player.pauseVideo(), 500);
+                    }
+                } else {
+                    // Same song, just ensuring state sync
+                    if (song.isPlaying === false) {
+                        player.pauseVideo();
+                        if (Math.abs(player.getCurrentTime() - startSeconds) > 2) {
+                            player.seekTo(startSeconds, true);
+                        }
+                    } else {
+                        const current = player.getCurrentTime();
+                        // Only seek if drift is > 3 seconds to avoid constant skipping
+                        if (Math.abs(current - startSeconds) > 3) {
+                            player.seekTo(startSeconds, true);
+                        }
+                        const state = player.getPlayerState?.();
+                        if (state !== 1 && state !== 3) { 
+                            player.playVideo();
+                        }
+                    }
+                }
             }
         }
     }, []);
@@ -153,6 +192,7 @@ export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true)
         if (isPlayerReady && currentSong) {
             syncSong(currentSong);
         } else if (isPlayerReady && !currentSong && playerRef.current) {
+            activeVideoIdRef.current = null;
             playerRef.current.stopVideo();
         }
     }, [currentSong, isPlayerReady, isSystemActive, syncSong]);
@@ -205,10 +245,29 @@ export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true)
         initializePlayer();
     };
 
+    /**
+     * [TH] ฟังก์ชันเล่น/หยุดวิดีโอ (Play/Pause Toggle) สำหรับ Keyboard Shortcuts
+     * [EN] Toggle play/pause state of the player
+     * Note: Now we just return what the intent is and the current local playback time, 
+     * useKeyboardShortcuts will pass these to useData.js to broadcast.
+     */
+    const togglePlayPause = useCallback(() => {
+        if (!playerRef.current || typeof playerRef.current.getPlayerState !== 'function') return null;
+        const state = playerRef.current.getPlayerState();
+        const currentTime = playerRef.current.getCurrentTime() || 0;
+        
+        if (state === 1) { // Playing
+            return { willPlay: false, currentTime };
+        } else {
+            return { willPlay: true, currentTime };
+        }
+    }, []);
+
     return {
         isPlayerReady,
         duration,
         currentTime,
-        reloadPlayer
+        reloadPlayer,
+        togglePlayPause
     };
 };

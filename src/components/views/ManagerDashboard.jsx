@@ -4,6 +4,7 @@ import {
     Lock, Unlock, Library, Timer, RefreshCw, Activity
 } from 'lucide-react';
 import EventPlaylistManager from './EventPlaylistManager';
+import CustomVolumeSlider from '../ui/CustomVolumeSlider';
 import { useTheme } from '../../context/ThemeContext';
 
 /* ─────────────────────────────────────────────
@@ -369,7 +370,7 @@ const ManagerDashboard = ({
         // 1. Update local state for immediate UI feedback
         setSchedule(updatedSchedule);
 
-        // 2. Persist to Supabase immediately
+        // 2. Persist to Firebase immediately
         handleSaveSchedule(updatedSchedule);
     };
 
@@ -535,7 +536,7 @@ const ManagerDashboard = ({
 
                 {/* Volume — full width */}
                 <StatCard accent="cyan" style={{ gridColumn: '1 / -1', borderRadius: '18px', padding: '18px 22px' }}>
-                    <StatCard.Header label="Volume Control" accent="cyan" isLight={isLight} />
+                    <StatCard.Header label="Volume Control & Shortcuts" accent="cyan" isLight={isLight} />
                     <StatCard.Body>
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -546,13 +547,17 @@ const ManagerDashboard = ({
                             </div>
                             <span className="text-[14px] font-black text-gradient-cyan">{volume}%</span>
                         </div>
-                        <input
-                            type="range" min="0" max="100" value={volume}
-                            onChange={e => handleVolumeChange(parseInt(e.target.value))}
-                            className="w-full"
-                            style={{ background: `linear-gradient(to right, #06b6d4 ${volume}%, rgba(255,255,255,0.10) 0%)` }}
-                            aria-label={`ระดับเสียง ${volume}%`}
+                        <CustomVolumeSlider 
+                            value={volume} 
+                            onChange={handleVolumeChange} 
                         />
+                        {/* Keyboard Shortcuts Hint */}
+                        <div className="mt-5 pt-3 border-t flex flex-wrap gap-2 justify-center" style={{ borderColor: isLight ? 'rgba(6,182,212,0.1)' : 'rgba(34,211,238,0.1)' }}>
+                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>Space : Play/Pause</span>
+                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>M : Mute</span>
+                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>↑ / ↓ : Volume</span>
+                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>Shift + N : Next Song</span>
+                        </div>
                     </StatCard.Body>
                 </StatCard>
             </div>

@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { db } from '../lib/firebase';
+import { 
+    ref, onValue, get, set, push, remove, update, 
+    query, orderByChild, serverTimestamp 
+} from 'firebase/database';
 
 /**
  * @hook useData
  * @description 
- * [TH] ศูนย์กลางควบคุมข้อมูลหลัก จัดการฟัง/เขียนข้อมูลลง Supabase Realtime
- * [EN] The backbone data controller for the application using Supabase.
+ * [TH] ศูนย์กลางควบคุมข้อมูลหลัก จัดการฟัง/เขียนข้อมูลลง Firebase Realtime Database
+ * [EN] The backbone data controller for the application using Firebase Realtime Database.
  */
 export const useData = () => {
     // --- State Variables ---
@@ -19,19 +23,21 @@ export const useData = () => {
     const [activeEvent, setActiveEvent] = useState(null);
     const [maxSongDuration, setMaxSongDuration] = useState(10);
     const [loading, setLoading] = useState(true);
+    const [serverTimeOffset, setServerTimeOffset] = useState(0);
 
     const requestsRef = useRef(requests);
     const processingRef = useRef(false);
-    // Stable refs for handleSongEnd — avoids stale closure & stale deps
     const playbackModeRef = useRef(playbackMode);
     const activeEventRef = useRef(activeEvent);
     const eventPlaylistsRef = useRef(eventPlaylists);
-    const fallbackPlaylistRef = useRef(null); // set below
+    const fallbackPlaylistRef = useRef(null);
+    const serverTimeOffsetRef = useRef(serverTimeOffset);
 
     useEffect(() => { requestsRef.current = requests; }, [requests]);
     useEffect(() => { playbackModeRef.current = playbackMode; }, [playbackMode]);
     useEffect(() => { activeEventRef.current = activeEvent; }, [activeEvent]);
     useEffect(() => { eventPlaylistsRef.current = eventPlaylists; }, [eventPlaylists]);
+    useEffect(() => { serverTimeOffsetRef.current = serverTimeOffset; }, [serverTimeOffset]);
 
     const fallbackPlaylist = React.useMemo(() => [
         { title: "Lofi Study - Chill Beats", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
@@ -40,16 +46,15 @@ export const useData = () => {
         { title: "Chillhop Yearmix 2024", url: "https://www.youtube.com/watch?v=lTRiuFIWV54" },
         { title: "Morning Coffee - Smooth Jazz", url: "https://www.youtube.com/watch?v=3jWRrafhO7M" }
     ], []);
-    // Keep fallbackPlaylist ref in sync
     useEffect(() => { fallbackPlaylistRef.current = fallbackPlaylist; }, [fallbackPlaylist]);
 
     // --- Helper: Process System State ---
     const updateSystemStateValue = useCallback((key, value) => {
-        if (!value) return;
+        if (value === undefined || value === null) return;
         switch (key) {
             case 'volume': setVolume(value); break;
-            case 'current_playing': setCurrentSong(value); break;
-            case 'schedule': setSchedule(value); break;
+            case 'currentSong': setCurrentSong(value); break;
+            case 'schedule': setSchedule(value || {}); break;
             case 'settings':
                 setIsRequestsEnabled(value.requestsEnabled !== false);
                 setPlaybackMode(value.playbackMode || 'queue');
@@ -62,105 +67,83 @@ export const useData = () => {
 
     // --- Initial Data Fetch & Realtime Subscriptions ---
     useEffect(() => {
-        const initData = async () => {
-            try {
-                // 1. Fetch System State
-                const { data: sysData } = await supabase.from('system_state').select('*');
-                sysData?.forEach(row => updateSystemStateValue(row.key, row.value));
+        // 1. Listen to System State
+        const stateKeys = ['volume', 'currentSong', 'schedule', 'settings'];
+        const stateUnsubs = stateKeys.map(key => {
+            return onValue(ref(db, key), (snapshot) => {
+                updateSystemStateValue(key, snapshot.val());
+                if (key === 'settings') setLoading(false); // Assume done when settings load
+            });
+        });
 
-                // 2. Fetch Requests
-                const { data: reqData } = await supabase.from('requests').select('*').order('index', { ascending: true });
-                if (reqData) setRequests(reqData);
-
-                // 3. Fetch Events & Songs
-                const { data: events } = await supabase.from('events').select('*');
-                const { data: songs } = await supabase.from('event_songs').select('*');
-                
-                const playlistsObj = {};
-                events?.forEach(e => {
-                    playlistsObj[e.name] = { created: e.created, songs: {} };
-                });
-                songs?.forEach(s => {
-                    if (playlistsObj[s.event_name]) {
-                        playlistsObj[s.event_name].songs[s.id] = { url: s.url, title: s.title, added: s.added };
-                    }
-                });
-                setEventPlaylists(playlistsObj);
-
-                setLoading(false);
-            } catch (err) {
-                console.error('Initial fetch error:', err);
+        // 2. Listen to Requests (Ordered by index)
+        const requestsQuery = query(ref(db, 'requests'), orderByChild('index'));
+        const requestsUnsub = onValue(requestsQuery, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Convert object to sorted array
+                const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                setRequests(list.sort((a, b) => a.index - b.index));
+            } else {
+                setRequests([]);
             }
+        });
+
+        // 3. Listen to Events & Songs
+        const eventsUnsub = onValue(ref(db, 'eventPlaylists'), (snapshot) => {
+            setEventPlaylists(snapshot.val() || {});
+        });
+
+        // 4. Listen to Server Time Offset
+        const offsetRef = ref(db, '.info/serverTimeOffset');
+        const offsetUnsub = onValue(offsetRef, (snap) => {
+            setServerTimeOffset(snap.val() || 0);
+        });
+
+        return () => {
+            stateUnsubs.forEach(unsub => unsub());
+            requestsUnsub();
+            eventsUnsub();
+            offsetUnsub();
         };
-
-        initData();
-
-        // --- Realtime Subscriptions ---
-        const channel = supabase.channel('app_sync')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    setRequests(prev => [...prev, payload.new].sort((a, b) => a.index - b.index));
-                } else if (payload.eventType === 'DELETE') {
-                    setRequests(prev => prev.filter(r => r.id !== payload.old.id));
-                } else if (payload.eventType === 'UPDATE') {
-                    setRequests(prev => prev.map(r => r.id === payload.new.id ? payload.new : r).sort((a, b) => a.index - b.index));
-                }
-            })
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'system_state' }, (payload) => {
-                updateSystemStateValue(payload.new.key, payload.new.value);
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, async () => {
-                // Simplified: Re-fetch playlists on any event change
-                const { data: events } = await supabase.from('events').select('*');
-                const { data: songs } = await supabase.from('event_songs').select('*');
-                const playlistsObj = {};
-                events?.forEach(e => playlistsObj[e.name] = { created: e.created, songs: {} });
-                songs?.forEach(s => {
-                    if (playlistsObj[s.event_name]) playlistsObj[s.event_name].songs[s.id] = { url: s.url, title: s.title, added: s.added };
-                });
-                setEventPlaylists(playlistsObj);
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'event_songs' }, async () => {
-                const { data: events } = await supabase.from('events').select('*');
-                const { data: songs } = await supabase.from('event_songs').select('*');
-                const playlistsObj = {};
-                events?.forEach(e => playlistsObj[e.name] = { created: e.created, songs: {} });
-                songs?.forEach(s => {
-                    if (playlistsObj[s.event_name]) playlistsObj[s.event_name].songs[s.id] = { url: s.url, title: s.title, added: s.added };
-                });
-                setEventPlaylists(playlistsObj);
-            })
-            .subscribe();
-
-        return () => { channel.unsubscribe(); };
     }, [updateSystemStateValue]);
 
     // --- Actions (Mutations) ---
 
-    /** [TH] กำหนดเพลงใหม่ | [EN] Set current song */
     const playNextSong = useCallback(async (song) => {
         if (!song) return;
+        
+        // If it's a request from the queue, remove it from queue first
         if (song.id && !song.isAutoDj && !song.isEventSong) {
-            await supabase.from('requests').delete().eq('id', song.id);
+            await remove(ref(db, `requests/${song.id}`));
         }
 
-        await supabase.from('system_state').upsert({
-            key: 'current_playing',
-            value: { ...song, startedAt: Date.now() }
+        // Set current playing song
+        await set(ref(db, 'currentSong'), { 
+            ...song, 
+            startedAt: Date.now() + serverTimeOffsetRef.current,
+            isPlaying: true 
         });
     }, []);
 
     const stopSong = async () => {
-        await supabase.from('system_state').upsert({ key: 'current_playing', value: null });
+        await set(ref(db, 'currentSong'), null);
     };
 
-    /**
-     * Advance to the next song.
-     * @param {boolean} forceHalt - If true, ONLY resets the processing lock without playing next.
-     *   Used when the schedule ends and we want silence, not another song.
-     */
+    const toggleGlobalPlayPause = async (willPlay, currentTimeSeconds) => {
+        if (!currentSong) return;
+        const currentRef = ref(db, 'currentSong');
+        if (willPlay) {
+            // Resuming: re-calculate startedAt so that (Date.now() + offset - startedAt) = currentTimeSeconds
+            const newStartedAt = (Date.now() + serverTimeOffsetRef.current) - (currentTimeSeconds * 1000);
+            await update(currentRef, { isPlaying: true, startedAt: newStartedAt });
+        } else {
+            // Pausing
+            await update(currentRef, { isPlaying: false, pausedTime: currentTimeSeconds });
+        }
+    };
+
     const handleSongEnd = useCallback((forceHalt = false) => {
-        // Always reset the lock on forceHalt so future calls can proceed
         if (forceHalt) {
             processingRef.current = false;
             return;
@@ -169,7 +152,6 @@ export const useData = () => {
         processingRef.current = true;
 
         setTimeout(() => {
-            // Read latest values from refs to avoid stale closures
             const mode = playbackModeRef.current;
             const eventName = activeEventRef.current;
             const currentQueue = requestsRef.current;
@@ -200,17 +182,18 @@ export const useData = () => {
             }
             processingRef.current = false;
         }, 500);
-    }, [playNextSong]); // Only depends on stable playNextSong, all others via refs
+    }, [playNextSong]);
 
     const addRequest = async (url, knownTitle, student = "Student") => {
         if (!isRequestsEnabled && student === "Student") throw new Error('REQUESTS_DISABLED');
 
         const timestamp = Date.now();
         const placeholderTitle = knownTitle || "กำลังโหลดชื่อเพลง...";
-        const id = crypto.randomUUID();
+        const newRequestRef = push(ref(db, 'requests'));
+        const id = newRequestRef.key;
 
-        await supabase.from('requests').insert({
-            id, url, student, 
+        await set(newRequestRef, {
+            url, student, 
             title: placeholderTitle, 
             timestamp, 
             index: timestamp 
@@ -221,21 +204,19 @@ export const useData = () => {
         }
 
         if (!knownTitle) {
-            (async () => {
-                try {
-                    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-                    const data = await res.json();
-                    if (data.title) await supabase.from('requests').update({ title: data.title }).eq('id', id);
-                } catch {
-                    console.warn('[useData] Failed to fetch video title in background');
-                }
-            })();
+            try {
+                const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                if (data.title) await update(ref(db, `requests/${id}`), { title: data.title });
+            } catch {
+                console.warn('[useData] Failed to fetch video title');
+            }
         }
     };
 
     const deleteRequest = async (id) => {
-        const { error } = await supabase.from('requests').delete().eq('id', id);
-        return error === null;
+        await remove(ref(db, `requests/${id}`));
+        return true;
     };
 
     const moveInQueue = async (requestId, targetIndex) => {
@@ -246,65 +227,49 @@ export const useData = () => {
         const [movedItem] = updatedRequests.splice(index, 1);
         updatedRequests.splice(targetIndex, 0, movedItem);
 
-        const updates = updatedRequests.map((req, i) => ({
-            id: req.id,
-            url: req.url,
-            title: req.title,
-            student: req.student,
-            timestamp: req.timestamp,
-            index: i
-        }));
+        const updates = {};
+        updatedRequests.forEach((req, i) => {
+            updates[`requests/${req.id}/index`] = i;
+        });
 
-        await supabase.from('requests').upsert(updates);
+        await update(ref(db), updates);
     };
 
     const toggleRequestLock = async (enabled) => {
-        const newSettings = { requestsEnabled: enabled, playbackMode, activeEvent, maxSongDuration };
-        await supabase.from('system_state').upsert({ key: 'settings', value: newSettings });
+        await update(ref(db, 'settings'), { requestsEnabled: enabled });
     };
 
     const updateVolume = async (newVol) => {
-        await supabase.from('system_state').upsert({ key: 'volume', value: newVol });
+        await set(ref(db, 'volume'), newVol);
     };
 
     const updateSchedule = async (newSchedule) => {
-        try {
-            const { error } = await supabase.from('system_state').upsert({ key: 'schedule', value: newSchedule });
-            if (error) {
-                console.error("[useData] updateSchedule failed:", error);
-                throw error;
-            }
-        } catch (err) {
-            console.error("[useData] updateSchedule catch:", err);
-            throw err;
-        }
+        await set(ref(db, 'schedule'), newSchedule);
     };
 
     const addEventPlaylist = async (eventName) => {
         if (!eventName) return;
-        await supabase.from('events').insert({ name: eventName, created: Date.now() });
+        await set(ref(db, `eventPlaylists/${eventName}`), { created: Date.now(), songs: {} });
     };
 
     const deleteEventPlaylist = async (eventName) => {
-        await supabase.from('events').delete().eq('name', eventName);
+        await remove(ref(db, `eventPlaylists/${eventName}`));
     };
 
     const addSongToEvent = async (eventName, url, title) => {
-        await supabase.from('event_songs').insert({
-            id: crypto.randomUUID(),
-            event_name: eventName,
+        const newSongRef = push(ref(db, `eventPlaylists/${eventName}/songs`));
+        await set(newSongRef, {
             url, title,
             added: Date.now()
         });
     };
 
     const deleteSongFromEvent = async (eventName, songId) => {
-        await supabase.from('event_songs').delete().eq('id', songId);
+        await remove(ref(db, `eventPlaylists/${eventName}/songs/${songId}`));
     };
 
     const setPlaybackModeAction = async (mode, eventName = null) => {
-        const newSettings = { requestsEnabled: isRequestsEnabled, playbackMode: mode, activeEvent: eventName, maxSongDuration };
-        await supabase.from('system_state').upsert({ key: 'settings', value: newSettings });
+        await update(ref(db, 'settings'), { playbackMode: mode, activeEvent: eventName });
 
         if (mode === 'event' && eventName) {
             const songsObj = eventPlaylists[eventName]?.songs;
@@ -317,13 +282,12 @@ export const useData = () => {
     };
 
     const setMaxDurationAction = async (minutes) => {
-        const newSettings = { requestsEnabled: isRequestsEnabled, playbackMode, activeEvent, maxSongDuration: minutes };
-        await supabase.from('system_state').upsert({ key: 'settings', value: newSettings });
+        await update(ref(db, 'settings'), { maxSongDuration: minutes });
     };
 
     return {
-        requests, currentSong, schedule, setSchedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent, maxSongDuration, loading,
-        addRequest, deleteRequest, moveInQueue, toggleRequestLock, playNextSong, stopSong, handleSongEnd, updateVolume, updateSchedule,
+        requests, currentSong, schedule, setSchedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent, maxSongDuration, loading, serverTimeOffset,
+        addRequest, deleteRequest, moveInQueue, toggleRequestLock, playNextSong, stopSong, toggleGlobalPlayPause, handleSongEnd, updateVolume, updateSchedule,
         addEventPlaylist, deleteEventPlaylist, addSongToEvent, deleteSongFromEvent, setPlaybackMode: setPlaybackModeAction, setMaxDuration: setMaxDurationAction
     };
 };

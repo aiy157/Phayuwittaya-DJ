@@ -13,6 +13,7 @@ import { useAuth } from './hooks/useAuth';
 import { useData } from './hooks/useData';
 import { usePlayer } from './hooks/usePlayer';
 import { getYouTubeID } from './services/youtubeService';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Components
 import AppShell from './components/layout/AppShell';
@@ -55,11 +56,11 @@ function App() {
   const {
     requests, currentSong, schedule, setSchedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent,
     maxSongDuration, setMaxDuration, addRequest, deleteRequest, moveInQueue, toggleRequestLock, playNextSong, stopSong,
-    updateVolume, updateSchedule, handleSongEnd,
+    updateVolume, updateSchedule, handleSongEnd, toggleGlobalPlayPause, serverTimeOffset,
     addEventPlaylist, deleteEventPlaylist, addSongToEvent, deleteSongFromEvent, setPlaybackMode
   } = useData();
 
-  const { duration, currentTime, reloadPlayer } = usePlayer(currentSong, volume, handleSongEnd, isSystemActive);
+  const { duration, currentTime, reloadPlayer, togglePlayPause } = usePlayer(currentSong, volume, handleSongEnd, isSystemActive, serverTimeOffset);
 
   // --- UI Logic ---
   const showToast = (message, type = 'success') => {
@@ -69,6 +70,25 @@ function App() {
   const handleToastClose = useCallback(() => {
     setNotification(null);
   }, []);
+
+  const handleTogglePlayPause = useCallback(() => {
+    if (togglePlayPause && toggleGlobalPlayPause) {
+      const state = togglePlayPause();
+      if (state) {
+        toggleGlobalPlayPause(state.willPlay, state.currentTime);
+        return state.willPlay;
+      }
+    }
+  }, [togglePlayPause, toggleGlobalPlayPause]);
+
+  // --- Keyboard Shortcuts ---
+  useKeyboardShortcuts(viewMode === 'manager' && isAuthenticated, {
+    togglePlayPause: handleTogglePlayPause,
+    updateVolume,
+    playNextSong,
+    volume,
+    showToast
+  });
 
   // --- Scheduler ---
   useEffect(() => {

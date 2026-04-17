@@ -3,7 +3,7 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "site": "music-phayuwittaya",
+    "target": "ms",
     "public": "dist",
     "ignore": [
       "firebase.json",

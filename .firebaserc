@@ -1,5 +1,23 @@
 {
   "projects": {
-    "default": "exam-29508"
-  }
+    "default": "ms-pw-ef137"
+  },
+  "targets": {
+    "music-phayuwittaya": {
+      "hosting": {
+        "ms-pw-ef137": {
+          "site": "music-phayuwittaya",
+          "public": "dist"
+        }
+      }
+    },
+    "ms-pw-ef137": {
+      "hosting": {
+        "ms": [
+          "phayuwittaya-music"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
