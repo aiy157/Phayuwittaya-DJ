@@ -1,47 +1,101 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { db } from '../lib/firebase';
+import { ref, get, set, onValue } from 'firebase/database';
 
 /**
- * [TH] ปัจจุบันใช้ฟิกซ์รหัสผ่านไว้ในตัวแปรสิ่งแวดล้อม (เพื่อความปลอดภัยสูงสุด ควรย้ายไปใช้ Firebase Authentication)
- * [EN] Currently using manager password from environment variables.
- * TODO for strictly secure operations: Move to Firebase Authentication.
+ * [TH] รหัสผ่านเริ่มต้น — หากยังไม่มีรหัสใน Firebase จะใช้ค่านี้
+ * [EN] Default fallback password if Firebase has no record yet
  */
-const MANAGER_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "pw12pw";
+const DEFAULT_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'pw12pw';
+const PASSWORD_PATH = 'settings/adminPassword';
 
 /**
  * @hook useAuth
- * @description 
- * [TH] จัดการสถานะการเข้าสู่ระบบแบบง่ายๆ สำหรับ Manager Dashboard อาศัย LocalStorage
- * [EN] Manages simple authentication states for the Manager Dashboard.
- * Relies on LocalStorage to persist the authenticated session across page reloads.
- * 
- * @returns {Object} { isAuthenticated, login, logout }
+ * @description
+ * [TH] จัดการสถานะการเข้าสู่ระบบสำหรับ Manager Dashboard
+ *      รหัสผ่านถูกเก็บและอ่านจาก Firebase Realtime Database ที่ /settings/adminPassword
+ *      หากยังไม่มีรหัสในฐานข้อมูล จะใช้ค่าเริ่มต้น "pw12pw" และเขียนลงทันที
+ * [EN] Manages authentication for Manager Dashboard.
+ *      Password is stored in Firebase at /settings/adminPassword.
+ *      Falls back to default "pw12pw" and writes it if no record exists.
+ *
+ * @returns {Object} { isAuthenticated, login, logout, changePassword, isPasswordLoading }
  */
 export const useAuth = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem("manager_auth") === "true");
+    const [isAuthenticated, setIsAuthenticated] = useState(
+        () => sessionStorage.getItem('manager_auth') === 'true'
+    );
+    const [isPasswordLoading, setIsPasswordLoading] = useState(true);
+
+    // Keep live password in ref (avoids stale closures, re-render safe)
+    const passwordRef = useRef(DEFAULT_PASSWORD);
+
+    // --- Listen to Firebase for live password changes ---
+    useEffect(() => {
+        const passwordRef$ = ref(db, PASSWORD_PATH);
+
+        // First: ensure default password exists if Firebase is empty
+        get(passwordRef$).then((snap) => {
+            if (!snap.exists()) {
+                // Write the initial default password
+                set(passwordRef$, DEFAULT_PASSWORD).catch(console.error);
+            }
+        });
+
+        // Subscribe to live changes (so if password is changed, it applies immediately)
+        const unsub = onValue(passwordRef$, (snap) => {
+            const val = snap.val();
+            passwordRef.current = val || DEFAULT_PASSWORD;
+            setIsPasswordLoading(false);
+        });
+
+        return () => unsub();
+    }, []);
 
     /**
-     * [TH] พยายามเข้าสู่ระบบโดยตรวจสอบรหัสผ่านที่ป้อนเข้ามา
-     * [EN] Attempts to log the user in by matching the entered password
-     * @param {string} password - The inputted password
-     * @returns {boolean} - Returns true if successful, false otherwise
+     * [TH] เข้าสู่ระบบโดยตรวจสอบรหัสผ่านกับค่าใน Firebase
+     * [EN] Login by matching input against the live Firebase password
      */
     const login = (password) => {
-        if (password === MANAGER_PASSWORD) {
+        if (password === passwordRef.current) {
             setIsAuthenticated(true);
-            localStorage.setItem("manager_auth", "true");
+            sessionStorage.setItem('manager_auth', 'true');
             return true;
         }
         return false;
     };
 
     /**
-     * [TH] ล้างสถานะการเข้าสู่ระบบและเอาคีย์ออกจาก LocalStorage
-     * [EN] Clears the authentication state and removes the LocalStorage token
+     * [TH] ออกจากระบบและล้าง session
+     * [EN] Logout and clear session
      */
     const logout = () => {
         setIsAuthenticated(false);
-        localStorage.removeItem("manager_auth");
+        sessionStorage.removeItem('manager_auth');
     };
 
-    return { isAuthenticated, login, logout };
+    /**
+     * [TH] เปลี่ยนรหัสผ่านโดยตรวจสอบรหัสเก่าก่อน แล้วเขียนรหัสใหม่ลง Firebase
+     * [EN] Change password: validates old password, then writes new one to Firebase
+     * @param {string} oldPassword - รหัสเก่าเพื่อยืนยันตัวตน
+     * @param {string} newPassword - รหัสใหม่
+     * @returns {Promise<{success: boolean, error?: string}>}
+     */
+    const changePassword = async (oldPassword, newPassword) => {
+        if (oldPassword !== passwordRef.current) {
+            return { success: false, error: 'รหัสผ่านเดิมไม่ถูกต้อง' };
+        }
+        if (!newPassword || newPassword.trim().length < 4) {
+            return { success: false, error: 'รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร' };
+        }
+        try {
+            await set(ref(db, PASSWORD_PATH), newPassword.trim());
+            return { success: true };
+        } catch (err) {
+            console.error('[useAuth] changePassword failed:', err);
+            return { success: false, error: 'ไม่สามารถบันทึกรหัสได้ กรุณาลองอีกครั้ง' };
+        }
+    };
+
+    return { isAuthenticated, login, logout, changePassword, isPasswordLoading };
 };

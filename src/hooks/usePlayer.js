@@ -41,11 +41,12 @@ if (typeof window !== 'undefined' && !window.__ytApiDispatcherSet) {
  * @param {boolean} isSystemActive - Boolean deciding if the component is allowed to play media
  * @returns {Object} { isPlayerReady, duration, currentTime, reloadPlayer }
  */
-export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true, serverTimeOffset = 0) => {
+export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true, serverTimeOffset = 0, isPrimaryBroadcaster = false) => {
     const playerRef = useRef(null);
     const activeVideoIdRef = useRef(null);
     const isSystemActiveRef = useRef(isSystemActive);
     const serverTimeOffsetRef = useRef(serverTimeOffset);
+    const isPrimaryBroadcasterRef = useRef(isPrimaryBroadcaster);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -57,6 +58,7 @@ export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true,
 
     useEffect(() => { isSystemActiveRef.current = isSystemActive; }, [isSystemActive]);
     useEffect(() => { serverTimeOffsetRef.current = serverTimeOffset; }, [serverTimeOffset]);
+    useEffect(() => { isPrimaryBroadcasterRef.current = isPrimaryBroadcaster; }, [isPrimaryBroadcaster]);
     useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
     useEffect(() => { volumeRef.current = volume; }, [volume]);
     useEffect(() => { onSongEndRef.current = onSongEnd; }, [onSongEnd]);
@@ -157,9 +159,10 @@ export const usePlayer = (currentSong, volume, onSongEnd, isSystemActive = true,
                     onError: (e) => {
                         if (!isSystemActiveRef.current) return;
                         console.error("Player Error:", e.data);
-                        setTimeout(() => {
-                            if (onSongEndRef.current) onSongEndRef.current();
-                        }, 3000);
+                        // ถ้าคลิปมีปัญหา ให้ข้ามเฉพาะถ้าเป็นเครื่อง Primary Broadcaster เท่านั้น
+                        if (isPrimaryBroadcasterRef.current && onSongEndRef.current) {
+                            onSongEndRef.current();
+                        }
                     }
                 }
             });

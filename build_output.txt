@@ -1,0 +1,21 @@
+
+> ms@0.0.0 build
+> vite build
+
+[36mrolldown-vite v7.2.5 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 1722 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                0.13 kB
+dist/manifest.webmanifest         0.77 kB
+dist/index.html                   1.02 kB │ gzip:   0.50 kB
+dist/assets/index-Cknx_KO7.css   72.73 kB │ gzip:  14.11 kB
+dist/assets/index-AFrgD9KJ.js   489.50 kB │ gzip: 144.67 kB
+[32m✓ built in 1.52s[39m
+
+PWA v1.2.0
+mode      generateSW
+precache  21 entries (3929.11 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-687f5376.js

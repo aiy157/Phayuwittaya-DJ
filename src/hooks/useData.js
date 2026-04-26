@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from '../lib/firebase';
 import { 
     ref, onValue, get, set, push, remove, update, 
-    query, orderByChild, serverTimestamp 
+    query, orderByChild, serverTimestamp, limitToLast 
 } from 'firebase/database';
 
 /**
@@ -24,6 +24,7 @@ export const useData = () => {
     const [maxSongDuration, setMaxSongDuration] = useState(10);
     const [loading, setLoading] = useState(true);
     const [serverTimeOffset, setServerTimeOffset] = useState(0);
+    const [history, setHistory] = useState([]);
 
     const requestsRef = useRef(requests);
     const processingRef = useRef(false);
@@ -32,12 +33,14 @@ export const useData = () => {
     const eventPlaylistsRef = useRef(eventPlaylists);
     const fallbackPlaylistRef = useRef(null);
     const serverTimeOffsetRef = useRef(serverTimeOffset);
+    const currentSongRef = useRef(currentSong);
 
     useEffect(() => { requestsRef.current = requests; }, [requests]);
     useEffect(() => { playbackModeRef.current = playbackMode; }, [playbackMode]);
     useEffect(() => { activeEventRef.current = activeEvent; }, [activeEvent]);
     useEffect(() => { eventPlaylistsRef.current = eventPlaylists; }, [eventPlaylists]);
     useEffect(() => { serverTimeOffsetRef.current = serverTimeOffset; }, [serverTimeOffset]);
+    useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
 
     const fallbackPlaylist = React.useMemo(() => [
         { title: "Lofi Study - Chill Beats", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
@@ -100,11 +103,24 @@ export const useData = () => {
             setServerTimeOffset(snap.val() || 0);
         });
 
+        // 5. Listen to History
+        const historyQuery = query(ref(db, 'history'), limitToLast(20));
+        const historyUnsub = onValue(historyQuery, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                setHistory(list.sort((a, b) => b.endedAt - a.endedAt));
+            } else {
+                setHistory([]);
+            }
+        });
+
         return () => {
             stateUnsubs.forEach(unsub => unsub());
             requestsUnsub();
             eventsUnsub();
             offsetUnsub();
+            historyUnsub();
         };
     }, [updateSystemStateValue]);
 
@@ -118,6 +134,16 @@ export const useData = () => {
             await remove(ref(db, `requests/${song.id}`));
         }
 
+        // Push current song to history before replacing
+        if (currentSongRef.current && currentSongRef.current.url) {
+            const historyRef = ref(db, 'history');
+            const newHistoryItem = push(historyRef);
+            await set(newHistoryItem, {
+                ...currentSongRef.current,
+                endedAt: Date.now()
+            });
+        }
+
         // Set current playing song
         await set(ref(db, 'currentSong'), { 
             ...song, 
@@ -127,6 +153,13 @@ export const useData = () => {
     }, []);
 
     const stopSong = async () => {
+        if (currentSongRef.current && currentSongRef.current.url) {
+            const historyRef = ref(db, 'history');
+            await set(push(historyRef), {
+                ...currentSongRef.current,
+                endedAt: Date.now()
+            });
+        }
         await set(ref(db, 'currentSong'), null);
     };
 
@@ -288,6 +321,7 @@ export const useData = () => {
     return {
         requests, currentSong, schedule, setSchedule, volume, isRequestsEnabled, eventPlaylists, playbackMode, activeEvent, maxSongDuration, loading, serverTimeOffset,
         addRequest, deleteRequest, moveInQueue, toggleRequestLock, playNextSong, stopSong, toggleGlobalPlayPause, handleSongEnd, updateVolume, updateSchedule,
-        addEventPlaylist, deleteEventPlaylist, addSongToEvent, deleteSongFromEvent, setPlaybackMode: setPlaybackModeAction, setMaxDuration: setMaxDurationAction
+        addEventPlaylist, deleteEventPlaylist, addSongToEvent, deleteSongFromEvent, setPlaybackMode: setPlaybackModeAction, setMaxDuration: setMaxDurationAction,
+        history
     };
 };

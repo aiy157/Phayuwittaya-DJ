@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import {
     Clock, Music, Volume2, VolumeX, ListMusic, X, CheckCircle2,
-    Lock, Unlock, Library, Timer, RefreshCw, Activity
+    Lock, Unlock, Library, Timer, RefreshCw, Activity, KeyRound, MonitorPlay, Radio, Settings, History, Plus
 } from 'lucide-react';
 import EventPlaylistManager from './EventPlaylistManager';
 import CustomVolumeSlider from '../ui/CustomVolumeSlider';
@@ -360,8 +360,12 @@ const ManagerDashboard = ({
     playbackMode, activeEvent, setPlaybackMode,
     maxSongDuration, setMaxDuration,
     activeTab, setActiveTab,
+    onChangePassword,
+    isPrimaryBroadcaster, setIsPrimaryBroadcaster,
+    history = []
 }) => {
     const { isLight } = useTheme();
+    const [showHistory, setShowHistory] = useState(false);
     const toggleSessionActive = (s) => {
         const currentData = schedule[selectedDay]?.[s] || {};
         const updatedSession = { ...currentData, active: !currentData.active };
@@ -410,7 +414,7 @@ const ManagerDashboard = ({
         <div className="space-y-5 py-6 pb-16 animate-fade-in">
 
             {/* ═══════ BENTO STATS ═══════ */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" role="region" aria-label="System Status">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" role="region" aria-label="System Status">
 
                 {/* System Status */}
                 <StatCard accent="blue">
@@ -431,21 +435,38 @@ const ManagerDashboard = ({
                         </p>
                     </StatCard.Body>
                     <StatCard.Footer>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="
-                w-full flex items-center justify-center gap-1.5 py-2.5 rounded-[12px]
-                text-[12px] font-semibold min-h-[40px]
-                bg-blue-500/15 border border-blue-500/25 text-blue-300
-                hover:bg-blue-500/30 hover:text-blue-200
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70
-                active:scale-95
-                transition-all duration-150
-              "
-                            aria-label="รีเฟรชหน้าจอ"
-                        >
-                            <RefreshCw size={13} aria-hidden />รีเฟรช
-                        </button>
+                        <div className="flex flex-col gap-2">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="
+                    w-full flex items-center justify-center gap-1.5 py-2.5 rounded-[12px]
+                    text-[12px] font-semibold min-h-[40px]
+                    bg-blue-500/15 border border-blue-500/25 text-blue-300
+                    hover:bg-blue-500/30 hover:text-blue-200
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70
+                    active:scale-95
+                    transition-all duration-150
+                  "
+                                aria-label="รีเฟรชหน้าจอ"
+                            >
+                                <RefreshCw size={13} aria-hidden />รีเฟรช
+                            </button>
+                            <button
+                                onClick={onChangePassword}
+                                className="
+                    w-full flex items-center justify-center gap-1.5 py-2.5 rounded-[12px]
+                    text-[12px] font-semibold min-h-[40px]
+                    bg-violet-500/15 border border-violet-500/25 text-violet-300
+                    hover:bg-violet-500/30 hover:text-violet-200
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70
+                    active:scale-95
+                    transition-all duration-150
+                  "
+                                aria-label="เปลี่ยนรหัสผ่าน"
+                            >
+                                <KeyRound size={13} aria-hidden />เปลี่ยนรหัสผ่าน
+                            </button>
+                        </div>
                     </StatCard.Footer>
                 </StatCard>
 
@@ -482,16 +503,37 @@ const ManagerDashboard = ({
                             )}
                         </div>
                     </StatCard.Body>
+                    <StatCard.Footer>
+                        <button
+                            onClick={() => setShowHistory(true)}
+                            className="
+                                w-full flex items-center justify-center gap-1.5 py-2.5 rounded-[12px]
+                                text-[12px] font-semibold min-h-[40px]
+                                bg-violet-500/15 border border-violet-500/25 text-violet-300
+                                hover:bg-violet-500/30 hover:text-violet-200
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/70
+                                active:scale-95 transition-all duration-150
+                            "
+                            aria-label="ดูประวัติเพลง"
+                        >
+                            <History size={13} aria-hidden /> ประวัติการเล่น
+                        </button>
+                    </StatCard.Footer>
                 </StatCard>
 
-                {/* Requests Toggle */}
-                <StatCard
-                    accent={isRequestsEnabled ? 'emerald' : 'rose'}
-                    onClick={() => toggleRequestLock(!isRequestsEnabled)}
-                >
-                    <StatCard.Header label="Requests" accent={isRequestsEnabled ? 'emerald' : 'rose'} isLight={isLight} />
+                {/* Requests & Queue Settings */}
+                <StatCard accent={isRequestsEnabled ? 'emerald' : 'rose'}>
+                    <StatCard.Header label="Requests & Settings" accent={isRequestsEnabled ? 'emerald' : 'rose'} isLight={isLight} />
+                    
+                    {/* Body: Request Toggle */}
                     <StatCard.Body>
-                        <div className="flex items-center justify-between">
+                        <div 
+                           className="flex items-center justify-between cursor-pointer rounded-xl transition-all duration-200 hover:bg-white/5 p-2 -mx-2 -my-1"
+                           onClick={() => toggleRequestLock(!isRequestsEnabled)}
+                           role="button"
+                           tabIndex={0}
+                           aria-label="Toggle Request Status"
+                        >
                             <div>
                                 <div className="flex items-center gap-1.5 mb-0.5">
                                     {isRequestsEnabled
@@ -502,35 +544,81 @@ const ManagerDashboard = ({
                                         {isRequestsEnabled ? 'เปิดรับ' : 'ปิดรับ'}
                                     </span>
                                 </div>
-                                <p className="text-[11px]" style={{ color: textDim }}>แตะเพื่อเปลี่ยน</p>
+                                <p className="text-[11px]" style={{ color: textDim }}>แตะเพื่อเปลี่ยนสถานะเปิด/ปิดรับเพลง</p>
                             </div>
                             <div
-                                className={`toggle-track flex-shrink-0 ${isRequestsEnabled ? 'toggle-on' : 'toggle-off'}`}
+                                className={`toggle-track flex-shrink-0 ${isRequestsEnabled ? 'toggle-on' : 'toggle-off'} pointer-events-none`}
                                 aria-hidden
                             >
                                 <div className="toggle-thumb" />
                             </div>
                         </div>
                     </StatCard.Body>
-                </StatCard>
-
-                {/* Max Song Length */}
-                <StatCard accent="amber">
-                    <StatCard.Header label="Max Song Length" accent="amber" isLight={isLight} />
-                    <StatCard.Body>
-                        <div className="flex items-center gap-2 mb-2">
-                            <Timer size={16} className="text-amber-400" aria-hidden />
-                            <span className="text-[20px] font-black text-white">{maxSongDuration}</span>
-                            <span className="text-[12px] text-white/40 font-medium">นาที</span>
-                        </div>
-                    </StatCard.Body>
+                    
+                    {/* Footer: Max Song Length Slider */}
                     <StatCard.Footer>
+                        <div className="flex items-center justify-between gap-3 mb-2 px-1">
+                            <div className="flex items-center gap-1.5">
+                                <Timer size={14} className="text-amber-400" aria-hidden />
+                                <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider">Max Length</span>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-[15px] font-black text-amber-400">{maxSongDuration}</span>
+                                <span className="text-[10px] text-white/50 font-medium">นาที</span>
+                            </div>
+                        </div>
                         <input
                             type="range" min="1" max="60" value={maxSongDuration}
                             onChange={e => setMaxDuration(parseInt(e.target.value))}
+                            className="w-full"
                             style={{ background: `linear-gradient(to right, #f59e0b ${(maxSongDuration / 60) * 100}%, rgba(255,255,255,0.10) 0%)` }}
                             aria-label={`ความยาวสูงสุด ${maxSongDuration} นาที`}
                         />
+                    </StatCard.Footer>
+                </StatCard>
+
+                {/* Display & Broadcast */}
+                <StatCard accent="indigo">
+                    <StatCard.Header label="Display & Controls" accent="indigo" isLight={isLight} />
+                    <StatCard.Body>
+                        <div className="flex flex-col gap-3 h-full justify-center">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-300 ${isPrimaryBroadcaster ? 'bg-indigo-500' : (isLight ? 'bg-slate-300' : 'bg-slate-700/60')}`}>
+                                    <div className={`absolute left-0.5 top-0.5 w-3.5 h-3.5 bg-white rounded-full transition-all duration-300 shadow-sm ${isPrimaryBroadcaster ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    className="sr-only"
+                                    checked={isPrimaryBroadcaster}
+                                    onChange={(e) => setIsPrimaryBroadcaster(e.target.checked)}
+                                />
+                                <span className="text-[12px] font-bold text-white/90 group-hover:text-white transition-colors flex items-center gap-1.5">
+                                    <Radio size={13} className={isPrimaryBroadcaster ? "text-indigo-400" : "text-slate-400"} />
+                                    ตั้งเป็นเครื่องออกอากาศหลัก
+                                </span>
+                            </label>
+                            
+                            <p className="text-[10px] leading-tight mt-[-6px] ml-[40px]" style={{ color: textSub }}>
+                                ควบคุมการข้ามเพลงอัตโนมัติหากคลิปเล่นไม่ได้ (ควรเปิดไว้แค่เครื่องหลักเครื่องเดียว)
+                            </p>
+                        </div>
+                    </StatCard.Body>
+                    <StatCard.Footer>
+                        <button
+                            onClick={() => window.open('?mode=display', '_blank')}
+                            className="
+                    w-full flex items-center justify-center gap-1.5 py-2.5 rounded-[12px]
+                    text-[12px] font-semibold min-h-[40px]
+                    bg-indigo-500/15 border border-indigo-500/25 text-indigo-300
+                    hover:bg-indigo-500/30 hover:text-indigo-200
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70
+                    active:scale-95
+                    transition-all duration-150
+                  "
+                            aria-label="เปิดโหมดจอภาพ"
+                        >
+                            <MonitorPlay size={13} aria-hidden />เปิดโหมดฉายจอทีวี
+                        </button>
                     </StatCard.Footer>
                 </StatCard>
 
@@ -553,10 +641,19 @@ const ManagerDashboard = ({
                         />
                         {/* Keyboard Shortcuts Hint */}
                         <div className="mt-5 pt-3 border-t flex flex-wrap gap-2 justify-center" style={{ borderColor: isLight ? 'rgba(6,182,212,0.1)' : 'rgba(34,211,238,0.1)' }}>
-                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>Space : Play/Pause</span>
-                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>M : Mute</span>
-                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>↑ / ↓ : Volume</span>
-                            <span className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>Shift + N : Next Song</span>
+                            {[
+                                'Space : Play/Pause',
+                                'M : Mute',
+                                '↑ / ↓ : Volume ±5%',
+                                '← / → : Seek ±10s',
+                                'Shift+N : Next Song',
+                                'R : Reload Player',
+                                '0–9 : Volume Preset',
+                            ].map(hint => (
+                                <span key={hint} className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-[8px] ${isLight ? 'bg-cyan-500/10 text-cyan-800' : 'bg-cyan-500/15 text-cyan-200'}`}>
+                                    {hint}
+                                </span>
+                            ))}
                         </div>
                     </StatCard.Body>
                 </StatCard>
@@ -654,6 +751,48 @@ const ManagerDashboard = ({
                         setPlaybackMode={setPlaybackMode}
                         showToast={showToast}
                     />
+                </div>
+            )}
+
+            {/* History Modal */}
+            {showHistory && (
+                <div role="dialog" aria-labelledby="history-modal" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-sm transition-opacity" onClick={() => setShowHistory(false)} aria-hidden="true" />
+                    <div className={`relative w-full max-w-lg rounded-[20px] p-6 shadow-2xl ${isLight ? 'bg-white/90 border-slate-200 shadow-slate-200/50' : 'bg-[#0f172a]/90 border-[#1e293b] shadow-black/50'} border backdrop-blur-md transition-all`}>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <History size={20} className="text-violet-400" />
+                                <h3 id="history-modal" className={`text-lg font-bold ${isLight ? 'text-slate-800' : 'text-white'}`}>ประวัติเพลงที่เล่นจบไปแล้ว</h3>
+                            </div>
+                            <button onClick={() => setShowHistory(false)} className={`p-2 rounded-full transition-colors ${isLight ? 'text-slate-500 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`} aria-label="ปิดประวัติ">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-2">
+                            {history.length > 0 ? (
+                                history.map((item, idx) => (
+                                    <div key={item.id + idx} className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${isLight ? 'bg-slate-50 border-slate-100 hover:border-slate-300' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-sm font-bold truncate ${isLight ? 'text-slate-800' : 'text-white'}`}>{item.title}</p>
+                                            <p className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>ขอโดย: {item.student || 'Auto-DJ'}</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                addRequest(item.url, item.title, "แอดมิน");
+                                                showToast("เพิ่มกลับเข้าคิวแล้ว", "success");
+                                            }}
+                                            className="whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-lg text-[11px] font-bold transition-colors"
+                                        >
+                                            <Plus size={12} /> เข้าคิว
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className={`text-center py-6 text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>ยังไม่มีประวัติการเล่นเพลง</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
